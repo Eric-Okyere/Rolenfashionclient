@@ -123,3 +123,27 @@ body {
     animation: none;
   }
 }
+
+/* Printing a single receipt/credential (e.g. the admission application
+   confirmation) without the rest of the page. A component triggers this by
+   adding the "print-receipt-mode" class to <body> right before calling
+   window.print(), and removing it again on the "afterprint" event. Works
+   regardless of how deeply the printable element is nested, since it hides
+   everything and then re-reveals only that element's own subtree. */
+@media print {
+  body.print-receipt-mode * {
+    visibility: hidden;
+  }
+  body.print-receipt-mode #printable-receipt,
+  body.print-receipt-mode #printable-receipt * {
+    visibility: visible;
+  }
+  body.print-receipt-mode #printable-receipt {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 1.5rem;
+    box-shadow: none;
+  }
+}

@@ -86,12 +86,15 @@ export default function StatusChecker() {
             <p className="text-xs text-muted mb-4">Submitted {new Date(application.submittedAt).toLocaleDateString()}</p>
 
             {application.canDownloadLetter && (
-              <a
-                href={`${API_URL}/api/applications/track/${application.applicationNumber}/letter?email=${encodeURIComponent(email)}`}
-                className="btn-gold"
-              >
-                Download Admission Letter (PDF)
-              </a>
+              <>
+                <a
+                  href={`${API_URL}/api/applications/track/${application.applicationNumber}/letter?email=${encodeURIComponent(email)}`}
+                  className="btn-gold"
+                >
+                  Download &amp; Print Admission Letter
+                </a>
+                <p className="text-xs text-muted mt-2">Opens as a PDF — open it and use your browser or PDF viewer&apos;s Print option.</p>
+              </>
             )}
           </motion.div>
         )}

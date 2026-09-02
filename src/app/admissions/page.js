@@ -1,4 +1,5 @@
 import { Suspense } from 'react';
+import Link from 'next/link';
 import { safeFetch } from '@/lib/api';
 import AdmissionsForm from '@/components/AdmissionsForm';
 import Reveal from '@/components/motion/Reveal';
@@ -13,10 +14,16 @@ export default async function AdmissionsPage() {
       <Reveal className="text-center max-w-2xl mx-auto mb-12">
         <p className="uppercase tracking-[0.2em] text-xs text-gold-dark mb-3">Admissions</p>
         <h1 className="font-display text-4xl mb-4">Apply to Rolen</h1>
-        <p className="text-ink/70">
+        <p className="text-ink/70 mb-6">
           Fill out the form below to apply. You&apos;ll receive an application number immediately — use it to track your
           status and, once admitted, download your signed admission letter.
         </p>
+        <div className="flex items-center justify-center gap-3 text-sm text-ink/60">
+          <span>Already applied?</span>
+          <Link href="/admissions/status" className="btn-outline text-sm">
+            Track My Application Status
+          </Link>
+        </div>
       </Reveal>
       <Reveal delay={0.1}>
         <Suspense fallback={<p className="text-center text-muted">Loading form…</p>}>

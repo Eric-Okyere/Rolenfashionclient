@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { apiFetch } from '@/lib/api';
@@ -35,13 +35,39 @@ export default function AdmissionsForm({ courses }) {
 
   const selectedCourse = courses.find((c) => c._id === form.course);
 
+  // Printing the confirmation card (see the "print-receipt-mode" rule in
+  // globals.css) so a student can keep a physical copy of their application
+  // number — the credential they'll need to check their status later.
+  useEffect(() => {
+    function cleanup() {
+      document.body.classList.remove('print-receipt-mode');
+    }
+    window.addEventListener('afterprint', cleanup);
+    return () => {
+      window.removeEventListener('afterprint', cleanup);
+      cleanup();
+    };
+  }, []);
+
+  function handlePrint() {
+    document.body.classList.add('print-receipt-mode');
+    window.print();
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
     setSubmitting(true);
     setResult(null);
     try {
       const data = await apiFetch('/api/applications', { method: 'POST', body: JSON.stringify(form) });
-      setResult({ applicationNumber: data.applicationNumber });
+      setResult({
+        applicationNumber: data.applicationNumber,
+        firstName: form.firstName,
+        lastName: form.lastName,
+        email: form.email,
+        courseTitle: selectedCourse?.title || '',
+        submittedAt: new Date().toISOString(),
+      });
       setForm(initialState);
     } catch (err) {
       setResult({ error: err.message, fieldErrors: err.errors });
@@ -58,13 +84,34 @@ export default function AdmissionsForm({ courses }) {
         transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
         className="card p-8 text-center max-w-lg mx-auto"
       >
-        <div className="text-4xl mb-3">🎉</div>
-        <h2 className="font-display text-2xl mb-2">Application submitted!</h2>
-        <p className="text-ink/70 mb-4">Save your application number to check your status and download your admission letter later.</p>
-        <p className="text-2xl font-semibold tracking-wide text-gold-dark mb-6">{result.applicationNumber}</p>
-        <a href={`/admissions/status?ref=${result.applicationNumber}`} className="btn-gold">
-          Track My Application
-        </a>
+        <div id="printable-receipt">
+          <div className="text-4xl mb-3">🎉</div>
+          <h2 className="font-display text-2xl mb-2">Application submitted!</h2>
+          <p className="text-ink/70 mb-4">
+            Save your application number to check your status and download your admission letter later.
+          </p>
+          <p className="text-2xl font-semibold tracking-wide text-gold-dark mb-1">{result.applicationNumber}</p>
+          <p className="text-sm text-ink/60 mb-6">
+            {result.firstName} {result.lastName}
+            {result.courseTitle && ` — ${result.courseTitle}`}
+            <br />
+            {result.email}
+            <br />
+            Submitted {new Date(result.submittedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}
+            <br />
+            <span className="text-xs">
+              To check your status later, you&apos;ll need both your application number and this email.
+            </span>
+          </p>
+        </div>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center">
+          <a href={`/admissions/status?ref=${result.applicationNumber}`} className="btn-gold">
+            Track My Application
+          </a>
+          <button type="button" onClick={handlePrint} className="btn-outline">
+            Print This Slip
+          </button>
+        </div>
       </motion.div>
     );
   }
