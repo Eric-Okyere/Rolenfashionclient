@@ -5,6 +5,9 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { apiFetch } from '@/lib/api';
 import { useAuth } from '@/lib/AuthContext';
+import ActivityRow from '@/components/ActivityRow';
+
+const ACTIVITY_POLL_MS = 30000;
 
 const EASE = [0.22, 1, 0.36, 1];
 
@@ -32,12 +35,14 @@ export default function AdminDashboard() {
   const [productCount, setProductCount] = useState(null);
   const [testimonialCount, setTestimonialCount] = useState(null);
   const [subscriberCount, setSubscriberCount] = useState(null);
+  const [activity, setActivity] = useState([]);
+  const [activityLoading, setActivityLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     (async () => {
       try {
-        const [statsData, messagesData, applicationsData, coursesData, galleryData, testimonialsData, newsletterData] =
+        const [statsData, messagesData, applicationsData, coursesData, galleryData, testimonialsData, newsletterData, activityData] =
           await Promise.all([
             apiFetch('/api/applications/stats/summary'),
             apiFetch('/api/messages'),
@@ -46,6 +51,7 @@ export default function AdminDashboard() {
             apiFetch('/api/gallery?all=1'),
             apiFetch('/api/testimonials?all=1'),
             apiFetch('/api/newsletter'),
+            apiFetch('/api/activity?limit=8'),
           ]);
         setStats(statsData);
         setMessages(messagesData.messages.slice(0, 5));
@@ -54,10 +60,26 @@ export default function AdminDashboard() {
         setProductCount(galleryData.items.length);
         setTestimonialCount(testimonialsData.testimonials.length);
         setSubscriberCount(newsletterData.subscribers.length);
+        setActivity(activityData.activity);
       } catch (err) {
         setError(err.message);
+      } finally {
+        setActivityLoading(false);
       }
     })();
+  }, []);
+
+  // Light polling so the admin sees new activity land without a manual refresh.
+  useEffect(() => {
+    const interval = setInterval(async () => {
+      try {
+        const data = await apiFetch('/api/activity?limit=8');
+        setActivity(data.activity);
+      } catch {
+        // Silent — the next tick will retry; no need to surface transient poll errors.
+      }
+    }, ACTIVITY_POLL_MS);
+    return () => clearInterval(interval);
   }, []);
 
   const unreadMessages = messages.filter((m) => !m.isRead).length;
@@ -181,6 +203,27 @@ export default function AdminDashboard() {
           <Link href="/admin/newsletter" className="block btn-outline w-full text-center">Newsletter Subscribers</Link>
           <Link href="/admin/settings" className="block btn-outline w-full text-center">Edit School Settings</Link>
         </div>
+      </div>
+
+      <div className="card p-6 mt-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="font-display text-lg">Recent Activity</h2>
+            <p className="text-xs text-muted mt-0.5">Live feed of what&apos;s happening across the site — refreshes automatically.</p>
+          </div>
+          <Link href="/admin/activity" className="text-sm text-gold-dark hover:underline shrink-0">View all</Link>
+        </div>
+        {activityLoading ? (
+          <p className="text-sm text-muted">Loading…</p>
+        ) : activity.length === 0 ? (
+          <p className="text-sm text-muted">No activity recorded yet — it&apos;ll start filling in as people use the site.</p>
+        ) : (
+          <ul className="space-y-3">
+            {activity.map((item) => (
+              <ActivityRow key={item._id} item={item} />
+            ))}
+          </ul>
+        )}
       </div>
     </div>
   );

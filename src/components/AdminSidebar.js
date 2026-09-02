@@ -13,6 +13,7 @@ const links = [
   { href: '/admin/testimonials', label: 'Testimonials', icon: '💬' },
   { href: '/admin/messages', label: 'Messages', icon: '✉️' },
   { href: '/admin/newsletter', label: 'Newsletter', icon: '📧' },
+  { href: '/admin/activity', label: 'Activity Log', icon: '🕒' },
   { href: '/admin/settings', label: 'Settings', icon: '⚙️' },
 ];
 
