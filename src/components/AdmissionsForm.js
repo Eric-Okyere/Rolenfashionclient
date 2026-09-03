@@ -152,6 +152,53 @@ export default function AdmissionsForm({ courses }) {
         <div className="rounded-lg bg-red-50 text-red-700 text-sm p-4">{result.error}</div>
       )}
 
+      {/* Pulled out of the grid into its own high-contrast, full-width block —
+          deliberately the first thing on the form (before even First Name) so
+          it's impossible to reach the end of the form without having noticed
+          it. Uses a gold-tinted border/background and a "REQUIRED" badge
+          rather than the small inline asterisk every other field uses, since
+          Eric asked for this one to be obviously unskippable. */}
+      <div
+        className={`rounded-xl border-2 p-5 transition-colors ${
+          photoPreview ? 'border-green-600/40 bg-green-50' : 'border-gold-dark bg-gold-dark/10'
+        }`}
+      >
+        <label className="block cursor-pointer">
+          <span className="flex flex-wrap items-center gap-2 mb-1">
+            <span className="font-display text-lg text-ink">Passport Photo</span>
+            <span className="inline-block bg-gold-dark text-cream text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full">
+              Required
+            </span>
+            {photoPreview && (
+              <span className="inline-block bg-green-600 text-white text-[11px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-full">
+                ✓ Added
+              </span>
+            )}
+          </span>
+          <span className="block mb-3 text-sm text-ink/70">
+            Your application cannot be submitted without this photo — it&apos;s needed for your ID and admission letter.
+          </span>
+          <div className="flex items-center gap-4">
+            {photoPreview ? (
+              // eslint-disable-next-line @next/next/no-img-element -- local object URL preview, not a next/image-eligible remote source
+              <img src={photoPreview} alt="Selected passport photo preview" className="w-20 h-20 rounded-full object-cover border-2 border-gold-dark shadow-sm" />
+            ) : (
+              <span className="w-20 h-20 rounded-full border-2 border-dashed border-gold-dark/60 flex items-center justify-center text-2xl text-gold-dark/70 shrink-0">
+                📷
+              </span>
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              required
+              onChange={(e) => handlePhotoChange(e.target.files?.[0] || null)}
+              className="text-sm"
+            />
+          </div>
+          <span className="block mt-2 text-xs text-muted">A clear, recent photo of your face (JPG or PNG, up to 5MB).</span>
+        </label>
+      </div>
+
       <fieldset className="grid md:grid-cols-2 gap-5">
         <legend className="font-display text-xl mb-2 md:col-span-2">Personal Information</legend>
         <Field label="First Name" required value={form.firstName} onChange={(v) => update('firstName', v)} />
@@ -163,29 +210,10 @@ export default function AdmissionsForm({ courses }) {
           label="Gender"
           value={form.gender}
           onChange={(v) => update('gender', v)}
-          options={['Female', 'Male', 'Other', 'Prefer not to say']}
+          options={['Female', 'Male']}
         />
         <Field label="Nationality" value={form.nationality} onChange={(v) => update('nationality', v)} />
         <Field label="Address" required value={form.address} onChange={(v) => update('address', v)} className="md:col-span-2" />
-        <label className="text-sm block md:col-span-2">
-          <span className="block mb-1 font-medium text-ink/80">
-            Passport Photo <span className="text-gold-dark">*</span>
-          </span>
-          <div className="flex items-center gap-4">
-            {photoPreview && (
-              // eslint-disable-next-line @next/next/no-img-element -- local object URL preview, not a next/image-eligible remote source
-              <img src={photoPreview} alt="Selected passport photo preview" className="w-16 h-16 rounded-full object-cover border border-black/15" />
-            )}
-            <input
-              type="file"
-              accept="image/*"
-              required
-              onChange={(e) => handlePhotoChange(e.target.files?.[0] || null)}
-              className="text-sm"
-            />
-          </div>
-          <span className="block mt-1 text-xs text-muted">A clear photo of your face — required for your ID and admission letter.</span>
-        </label>
       </fieldset>
 
       <fieldset className="grid md:grid-cols-2 gap-5">
