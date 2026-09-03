@@ -169,7 +169,7 @@ export default function AdminSettingsPage() {
             />
           </label>
           <label className="text-sm block">
-            <span className="block mb-1 font-medium">Note (e.g. when fabrics are needed, class days)</span>
+            <span className="block mb-1 font-medium">Note (e.g. when fabrics are needed)</span>
             <textarea
               rows={2}
               value={form.materialsNote || ''}
@@ -181,10 +181,25 @@ export default function AdminSettingsPage() {
         </section>
 
         <section className="card p-6 space-y-4">
-          <h2 className="font-display text-lg">Fees &amp; Payment Schedule</h2>
+          <h2 className="font-display text-lg">Tuition &amp; Payment Schedule</h2>
           <p className="text-sm text-muted">
-            Printed on the same admission-letter page as the materials list, under &ldquo;FEES AND PAYMENT
-            SCHEDULE.&rdquo; Leave blank to skip it.
+            Printed near the top of every admission letter. Free text, so it can cover more than one track&apos;s
+            pricing (e.g. Beginner vs. Advanced) — leave blank to fall back to a single auto-generated line based
+            on the admitted course&apos;s published fee.
+          </p>
+          <label className="text-sm block">
+            <span className="block mb-1 font-medium">Tuition</span>
+            <textarea
+              rows={3}
+              value={form.tuitionText || ''}
+              onChange={(e) => update('tuitionText', e.target.value)}
+              placeholder={'Tuition for the Beginner class (6 months) is GHS 7,000. Tuition for the Advanced class (3 months) is GHS 10,000.'}
+              className="w-full rounded-lg border border-black/15 p-2.5"
+            />
+          </label>
+          <p className="text-sm text-muted">
+            Printed on admission-letter page 2, under &ldquo;FEES AND PAYMENT SCHEDULE.&rdquo; Leave blank to
+            skip it.
           </p>
           <label className="text-sm block">
             <span className="block mb-1 font-medium">Fees &amp; Payment Schedule Text</span>
@@ -194,6 +209,26 @@ export default function AdminSettingsPage() {
               onChange={(e) => update('paymentScheduleText', e.target.value)}
               placeholder={
                 'For Beginners, the duration is Six (6) months. The cost is Seven Thousand Ghana Cedis (GHS 7,000.00).\n\nPayment Schedule: GHS 5,000.00 payable before commencement of class and the balance paid within a scheduled 3-month installments.'
+              }
+              className="w-full rounded-lg border border-black/15 p-2.5"
+            />
+          </label>
+        </section>
+
+        <section className="card p-6 space-y-4">
+          <h2 className="font-display text-lg">Class Schedule &amp; Academic Terms</h2>
+          <p className="text-sm text-muted">
+            Printed on admission-letter page 2, under &ldquo;CLASS SCHEDULE &amp; ACADEMIC TERMS.&rdquo; Leave
+            blank to skip it.
+          </p>
+          <label className="text-sm block">
+            <span className="block mb-1 font-medium">Class Schedule &amp; Academic Terms Text</span>
+            <textarea
+              rows={5}
+              value={form.scheduleText || ''}
+              onChange={(e) => update('scheduleText', e.target.value)}
+              placeholder={
+                'Beginner class: Monday – Wednesday, 9:00am – 2:00pm.\nAdvanced class: Thursday – Friday, 9:00am – 2:00pm.\n\nAcademic terms: March – September and September – March.'
               }
               className="w-full rounded-lg border border-black/15 p-2.5"
             />
