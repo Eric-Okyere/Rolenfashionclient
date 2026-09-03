@@ -25,6 +25,32 @@ export default async function AdmissionsPage() {
           </Link>
         </div>
       </Reveal>
+      {courses?.length > 0 && (
+        <Reveal delay={0.05} className="max-w-3xl mx-auto mb-12">
+          <h2 className="font-display text-xl text-center mb-1">Choose Your Class</h2>
+          <p className="text-sm text-ink/60 text-center mb-6">
+            Every student covers all five subject areas — fashion theory, textiles, pattern drafting, garment
+            construction and modern sewing. The choice below is which class track fits your schedule.
+          </p>
+          <div className="grid sm:grid-cols-2 gap-5">
+            {courses.map((c) => (
+              <div key={c._id} className="card p-5">
+                <span className="inline-block bg-ink/85 text-cream text-[11px] px-2.5 py-1 rounded-full mb-3">
+                  {c.level || c.title}
+                </span>
+                <h3 className="font-display text-lg font-semibold mb-1">{c.title}</h3>
+                <p className="text-sm text-muted mb-3">{c.summary}</p>
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-ink/70">{c.duration}</span>
+                  <span className="font-semibold text-gold-dark">
+                    {c.fee ? `${c.feeCurrency || 'GHS'} ${Number(c.fee).toLocaleString()}` : 'Contact us'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+      )}
       <Reveal delay={0.1}>
         <Suspense fallback={<p className="text-center text-muted">Loading form…</p>}>
           <AdmissionsForm courses={courses || []} />

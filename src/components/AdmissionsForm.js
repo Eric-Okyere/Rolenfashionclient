@@ -189,9 +189,13 @@ export default function AdmissionsForm({ courses }) {
       </fieldset>
 
       <fieldset className="grid md:grid-cols-2 gap-5">
-        <legend className="font-display text-xl mb-2 md:col-span-2">Program Choice</legend>
+        <legend className="font-display text-xl mb-2 md:col-span-2">Class Selection</legend>
+        {/* Every student takes all five subject areas together — the actual
+            choice is which class track (Beginner/Advanced) to enroll in, not
+            an individual subject, so this selects a track, not one course
+            out of many. */}
         <SelectField
-          label="Course"
+          label="Class"
           required
           value={form.course}
           onChange={(v) => update('course', v)}
@@ -199,13 +203,13 @@ export default function AdmissionsForm({ courses }) {
         />
         {selectedCourse?.intakePeriods?.length > 0 ? (
           <SelectField
-            label="Preferred Intake"
+            label="Academic Term"
             value={form.intakePeriod}
             onChange={(v) => update('intakePeriod', v)}
             options={selectedCourse.intakePeriods}
           />
         ) : (
-          <Field label="Preferred Intake" value={form.intakePeriod} onChange={(v) => update('intakePeriod', v)} />
+          <Field label="Academic Term" value={form.intakePeriod} onChange={(v) => update('intakePeriod', v)} />
         )}
         <Field label="Prior Education" value={form.priorEducation} onChange={(v) => update('priorEducation', v)} className="md:col-span-2" />
       </fieldset>
