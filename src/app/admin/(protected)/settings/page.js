@@ -142,6 +142,44 @@ export default function AdminSettingsPage() {
           </div>
         </section>
 
+        <section className="card p-6 space-y-4">
+          <h2 className="font-display text-lg">List of Materials &amp; Fabrics Needed</h2>
+          <p className="text-sm text-muted">
+            Printed as a second page on every admitted student&apos;s admission letter, so it comes out together
+            in one print. One item per line. Leave both lists empty to skip this page entirely.
+          </p>
+          <label className="text-sm block">
+            <span className="block mb-1 font-medium">Materials (one per line)</span>
+            <textarea
+              rows={8}
+              value={(form.materialsList || []).join('\n')}
+              onChange={(e) => update('materialsList', e.target.value.split('\n').map((s) => s.trim()).filter(Boolean))}
+              placeholder={'A set of curves\nGray baft\nSketch pads\n…'}
+              className="w-full rounded-lg border border-black/15 p-2.5 font-mono text-xs"
+            />
+          </label>
+          <label className="text-sm block">
+            <span className="block mb-1 font-medium">Fabrics Needed (one per line)</span>
+            <textarea
+              rows={4}
+              value={(form.fabricsList || []).join('\n')}
+              onChange={(e) => update('fabricsList', e.target.value.split('\n').map((s) => s.trim()).filter(Boolean))}
+              placeholder={'Cotton\nRayon\nChiffon\n…'}
+              className="w-full rounded-lg border border-black/15 p-2.5 font-mono text-xs"
+            />
+          </label>
+          <label className="text-sm block">
+            <span className="block mb-1 font-medium">Note (e.g. when fabrics are needed, class days)</span>
+            <textarea
+              rows={2}
+              value={form.materialsNote || ''}
+              onChange={(e) => update('materialsNote', e.target.value)}
+              placeholder="NB: Fabrics should be brought as and when they will be needed."
+              className="w-full rounded-lg border border-black/15 p-2.5"
+            />
+          </label>
+        </section>
+
         {isAdmin && (
           <button type="submit" disabled={saving} className="btn-gold">{saving ? 'Saving…' : 'Save Settings'}</button>
         )}

@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { apiFetch, API_URL } from '@/lib/api';
+import { apiFetch, API_URL, mediaUrl } from '@/lib/api';
 
 const STATUSES = ['pending', 'under_review', 'admitted', 'rejected', 'waitlisted'];
 
@@ -48,7 +48,13 @@ export default function ApplicationDetailPage() {
       <button onClick={() => router.push('/admin/applications')} className="text-sm text-gold-dark mb-4 hover:underline">
         ← Back to applications
       </button>
-      <h1 className="font-display text-3xl mb-1">{application.firstName} {application.lastName}</h1>
+      <div className="flex items-center gap-4 mb-1">
+        {application.photoUrl && (
+          // eslint-disable-next-line @next/next/no-img-element -- small admin-only thumbnail, not worth next/image's overhead here
+          <img src={mediaUrl(application.photoUrl)} alt={`${application.firstName} ${application.lastName}`} className="w-14 h-14 rounded-full object-cover border border-black/15" />
+        )}
+        <h1 className="font-display text-3xl">{application.firstName} {application.lastName}</h1>
+      </div>
       <p className="text-muted mb-6">{application.applicationNumber} · Applied {new Date(application.createdAt).toLocaleDateString()}</p>
 
       <div className="grid md:grid-cols-2 gap-6 mb-6">

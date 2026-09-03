@@ -26,11 +26,23 @@ export default function AdmissionsForm({ courses }) {
   const searchParams = useSearchParams();
   const preselected = searchParams.get('course') || '';
   const [form, setForm] = useState({ ...initialState, course: preselected });
+  const [photoFile, setPhotoFile] = useState(null);
+  const [photoPreview, setPhotoPreview] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState(null); // { applicationNumber } | { error }
 
   function update(field, value) {
     setForm((f) => ({ ...f, [field]: value }));
+  }
+
+  // Revokes the previous preview URL (if any) before creating the next one,
+  // so switching or clearing the photo never leaks an object URL.
+  function handlePhotoChange(file) {
+    setPhotoPreview((prev) => {
+      if (prev) URL.revokeObjectURL(prev);
+      return file ? URL.createObjectURL(file) : null;
+    });
+    setPhotoFile(file || null);
   }
 
   const selectedCourse = courses.find((c) => c._id === form.course);
@@ -59,7 +71,17 @@ export default function AdmissionsForm({ courses }) {
     setSubmitting(true);
     setResult(null);
     try {
-      const data = await apiFetch('/api/applications', { method: 'POST', body: JSON.stringify(form) });
+      // multipart/form-data (not JSON) so the optional photo can ride along
+      // with the text fields in a single request — apiFetch already skips
+      // setting a Content-Type header for a FormData body, letting the
+      // browser set the correct multipart boundary itself.
+      const fd = new FormData();
+      Object.entries(form).forEach(([key, value]) => {
+        if (value !== undefined && value !== null) fd.append(key, value);
+      });
+      if (photoFile) fd.append('photo', photoFile);
+
+      const data = await apiFetch('/api/applications', { method: 'POST', body: fd });
       setResult({
         applicationNumber: data.applicationNumber,
         firstName: form.firstName,
@@ -69,6 +91,7 @@ export default function AdmissionsForm({ courses }) {
         submittedAt: new Date().toISOString(),
       });
       setForm(initialState);
+      handlePhotoChange(null);
     } catch (err) {
       setResult({ error: err.message, fieldErrors: err.errors });
     } finally {
@@ -137,6 +160,22 @@ export default function AdmissionsForm({ courses }) {
         />
         <Field label="Nationality" value={form.nationality} onChange={(v) => update('nationality', v)} />
         <Field label="Address" required value={form.address} onChange={(v) => update('address', v)} className="md:col-span-2" />
+        <label className="text-sm block md:col-span-2">
+          <span className="block mb-1 font-medium text-ink/80">Passport Photo (optional)</span>
+          <div className="flex items-center gap-4">
+            {photoPreview && (
+              // eslint-disable-next-line @next/next/no-img-element -- local object URL preview, not a next/image-eligible remote source
+              <img src={photoPreview} alt="Selected passport photo preview" className="w-16 h-16 rounded-full object-cover border border-black/15" />
+            )}
+            <input
+              type="file"
+              accept="image/*"
+              onChange={(e) => handlePhotoChange(e.target.files?.[0] || null)}
+              className="text-sm"
+            />
+          </div>
+          <span className="block mt-1 text-xs text-muted">A clear photo of your face — used for your ID and admission letter.</span>
+        </label>
       </fieldset>
 
       <fieldset className="grid md:grid-cols-2 gap-5">
