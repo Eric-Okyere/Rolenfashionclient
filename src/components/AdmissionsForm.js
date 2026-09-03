@@ -68,10 +68,17 @@ export default function AdmissionsForm({ courses }) {
 
   async function handleSubmit(e) {
     e.preventDefault();
+    // Belt-and-suspenders alongside the file input's native `required` —
+    // catches the rare case that's bypassed (e.g. a very old browser) with
+    // the same message the server would otherwise reject the request with.
+    if (!photoFile) {
+      setResult({ error: 'A passport photo is required.' });
+      return;
+    }
     setSubmitting(true);
     setResult(null);
     try {
-      // multipart/form-data (not JSON) so the optional photo can ride along
+      // multipart/form-data (not JSON) so the required photo can ride along
       // with the text fields in a single request — apiFetch already skips
       // setting a Content-Type header for a FormData body, letting the
       // browser set the correct multipart boundary itself.
@@ -161,7 +168,9 @@ export default function AdmissionsForm({ courses }) {
         <Field label="Nationality" value={form.nationality} onChange={(v) => update('nationality', v)} />
         <Field label="Address" required value={form.address} onChange={(v) => update('address', v)} className="md:col-span-2" />
         <label className="text-sm block md:col-span-2">
-          <span className="block mb-1 font-medium text-ink/80">Passport Photo (optional)</span>
+          <span className="block mb-1 font-medium text-ink/80">
+            Passport Photo <span className="text-gold-dark">*</span>
+          </span>
           <div className="flex items-center gap-4">
             {photoPreview && (
               // eslint-disable-next-line @next/next/no-img-element -- local object URL preview, not a next/image-eligible remote source
@@ -170,11 +179,12 @@ export default function AdmissionsForm({ courses }) {
             <input
               type="file"
               accept="image/*"
+              required
               onChange={(e) => handlePhotoChange(e.target.files?.[0] || null)}
               className="text-sm"
             />
           </div>
-          <span className="block mt-1 text-xs text-muted">A clear photo of your face — used for your ID and admission letter.</span>
+          <span className="block mt-1 text-xs text-muted">A clear photo of your face — required for your ID and admission letter.</span>
         </label>
       </fieldset>
 
