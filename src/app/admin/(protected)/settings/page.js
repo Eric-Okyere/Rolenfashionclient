@@ -180,6 +180,26 @@ export default function AdminSettingsPage() {
           </label>
         </section>
 
+        <section className="card p-6 space-y-4">
+          <h2 className="font-display text-lg">Fees &amp; Payment Schedule</h2>
+          <p className="text-sm text-muted">
+            Printed on the same admission-letter page as the materials list, under &ldquo;FEES AND PAYMENT
+            SCHEDULE.&rdquo; Leave blank to skip it.
+          </p>
+          <label className="text-sm block">
+            <span className="block mb-1 font-medium">Fees &amp; Payment Schedule Text</span>
+            <textarea
+              rows={5}
+              value={form.paymentScheduleText || ''}
+              onChange={(e) => update('paymentScheduleText', e.target.value)}
+              placeholder={
+                'For Beginners, the duration is Six (6) months. The cost is Seven Thousand Ghana Cedis (GHS 7,000.00).\n\nPayment Schedule: GHS 5,000.00 payable before commencement of class and the balance paid within a scheduled 3-month installments.'
+              }
+              className="w-full rounded-lg border border-black/15 p-2.5"
+            />
+          </label>
+        </section>
+
         {isAdmin && (
           <button type="submit" disabled={saving} className="btn-gold">{saving ? 'Saving…' : 'Save Settings'}</button>
         )}

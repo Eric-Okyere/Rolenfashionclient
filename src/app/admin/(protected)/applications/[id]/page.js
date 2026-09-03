@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { apiFetch, API_URL, mediaUrl } from '@/lib/api';
+import { apiFetch, mediaUrl } from '@/lib/api';
 
 const STATUSES = ['pending', 'under_review', 'admitted', 'rejected', 'waitlisted'];
 
@@ -107,7 +107,7 @@ export default function ApplicationDetailPage() {
         <div className="flex items-center gap-3">
           <button type="submit" disabled={saving} className="btn-gold">{saving ? 'Saving…' : 'Save Decision'}</button>
           {application.status === 'admitted' && application.admissionLetterPath && (
-            <a href={`${API_URL}${application.admissionLetterPath}`} target="_blank" rel="noreferrer" className="btn-outline">
+            <a href={mediaUrl(application.admissionLetterPath)} target="_blank" rel="noreferrer" className="btn-outline">
               View Admission Letter
             </a>
           )}
