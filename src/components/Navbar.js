@@ -16,11 +16,32 @@ const links = [
   { href: '/contact', label: 'Contact' },
 ];
 
+const FALLBACK_LOGO = '/images/rolen-logo.png';
+
 export default function Navbar({ settings }) {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  // Tracks whether the Cloudinary-hosted logo failed to load, so the navbar
+  // can fall back to the bundled static logo instead of showing a broken-
+  // image icon — see the onError handler on the <Image> below. Covers any
+  // reason the fetch through next/image's optimizer can fail (Cloudinary
+  // asset briefly unreachable, deleted, a future remotePatterns mismatch,
+  // etc.), not just the specific bug that was already fixed once here.
+  const [logoError, setLogoError] = useState(false);
+  // Tracks which logoUrl the error flag above applies to. Compared against
+  // the current settings.logoUrl during render (not in an effect — this is
+  // the "adjust state while rendering" pattern React recommends for
+  // resetting state when a prop changes) so that uploading a new logo in
+  // Admin → Settings re-arms the fallback immediately, instead of a stale
+  // failure from a previous URL permanently sticking even after a working
+  // logo is set.
+  const [erroredLogoUrl, setErroredLogoUrl] = useState(settings?.logoUrl);
+  if (settings?.logoUrl !== erroredLogoUrl && logoError) {
+    setLogoError(false);
+    setErroredLogoUrl(settings?.logoUrl);
+  }
   const pathname = usePathname();
-  const logo = settings?.logoUrl ? mediaUrl(settings.logoUrl) : '/images/rolen-logo.png';
+  const logo = settings?.logoUrl && !logoError ? mediaUrl(settings.logoUrl) : FALLBACK_LOGO;
 
   // Shrinks and gains a shadow once the page scrolls — a plain state/CSS
   // toggle rather than a framer-motion transform, since this header is
@@ -51,7 +72,18 @@ export default function Navbar({ settings }) {
             whileTap={{ scale: 0.98 }}
             transition={{ duration: 0.15 }}
           >
-            <Image src={logo} alt={settings?.schoolName || 'Rolen School of Fashion and Design'} width={40} height={40} className="h-9 w-9 md:h-10 md:w-10 object-contain shrink-0" priority />
+            <Image
+              src={logo}
+              alt={settings?.schoolName || 'Rolen School of Fashion and Design'}
+              width={40}
+              height={40}
+              className="h-9 w-9 md:h-10 md:w-10 object-contain shrink-0"
+              priority
+              onError={() => {
+                setLogoError(true);
+                setErroredLogoUrl(settings?.logoUrl);
+              }}
+            />
             <span className="font-display text-base md:text-lg font-semibold leading-tight truncate">
               {settings?.schoolName || 'Rolen School of Fashion and Design'}
             </span>
