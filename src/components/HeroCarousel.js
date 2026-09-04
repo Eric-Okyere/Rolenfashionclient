@@ -15,11 +15,15 @@ const AUTOPLAY_MS = 6000;
 // from the product catalog, so Eric decides exactly what the banner shows
 // rather than it being auto-picked from whatever's in stock.
 //
-// Renders as a full-bleed background filling the whole hero section (see
-// page.js, which layers its own static eyebrow/headline/CTA text on top via
-// a sibling element, and gives the section its height) — a small floating
-// card doesn't read as an "advertisement," so this is deliberately not the
-// same component/style as the old product-driven hero card.
+// Renders as a full-bleed, media-only block — no title/caption/CTA text or
+// badges drawn over the photo/video (Eric shared a reference site's banner
+// and said "look at how this is appearing well... don't show any writings
+// on the carousel"). page.js now renders the site's own headline/CTA copy
+// in its own band directly *below* this block instead of layered on top of
+// it, so the carousel itself stays a clean, uncluttered showcase. Each slide
+// is still a real link (to its linked collection, or the shop) — clicking
+// anywhere on the photo/video navigates there — so removing the visible
+// button didn't remove the functionality, just the on-image text.
 //
 // With zero active slides, falls back to a plain on-brand gradient with a
 // faint centered logo watermark rather than an empty/broken carousel.
@@ -68,45 +72,31 @@ export default function HeroCarousel({ slides, fallbackSrc }) {
               a full gown, a standing couple, like Eric's kente photo — was
               getting its head cropped off by a plain `object-cover` fill on
               this wide, short banner: "the pictures in the carousel is not
-              showing well"). */}
-          <MediaCover
-            src={slide.src}
-            type={slide.type}
-            poster={slide.poster}
-            alt={slide.title || 'Rolen'}
-            className="absolute inset-0"
-          />
+              showing well"). Wrapped in a Link so the slide is still
+              clickable through to its collection with no visible button. */}
+          <Link href={slide.href} aria-label={slide.title || 'Shop this collection'} className="absolute inset-0 block">
+            <MediaCover
+              src={slide.src}
+              type={slide.type}
+              poster={slide.poster}
+              alt={slide.title || 'Rolen'}
+              className="absolute inset-0"
+            />
+          </Link>
         </motion.div>
       </AnimatePresence>
 
-      {/* Darkens the media so both the static headline (top, laid over this
-          by page.js) and this slide's own caption (bottom) stay legible
-          regardless of what the photo/video looks like underneath. */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/55" />
-
-      <div className="absolute bottom-16 md:bottom-20 left-0 right-0 px-6 text-center text-cream">
-        {slide.type === 'video' && (
-          <span className="inline-block text-[10px] font-semibold bg-black/60 px-2 py-0.5 rounded-full mb-2">▶ Video</span>
-        )}
-        {slide.title && <p className="font-display text-2xl md:text-4xl mb-1.5">{slide.title}</p>}
-        {slide.caption && <p className="text-cream/80 text-sm md:text-base max-w-xl mx-auto mb-4">{slide.caption}</p>}
-        <Link href={slide.href} className="inline-block btn-gold">
-          {slide.ctaLabel}
-        </Link>
-      </div>
-
       {count > 1 && (
         <>
-          {/* Arrow buttons are hidden below `sm`: on a narrow screen the
-              section is tall enough that a vertically-centered arrow lands
-              on top of the headline's own CTA buttons above. Autoplay plus
-              the dot indicators (always shown) still give mobile visitors a
-              way to browse and see how many slides there are. */}
+          {/* Arrows can now show on every screen size — with the headline
+              text moved below the carousel (see page.js) instead of
+              overlaid on it, there's nothing left for a centered arrow to
+              collide with. */}
           <button
             type="button"
             onClick={prev}
             aria-label="Previous slide"
-            className="hidden sm:flex absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/40 text-white items-center justify-center hover:bg-black/60 transition-colors text-xl"
+            className="flex absolute left-3 md:left-6 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/40 text-white items-center justify-center hover:bg-black/60 transition-colors text-xl z-10"
           >
             ‹
           </button>
@@ -114,11 +104,11 @@ export default function HeroCarousel({ slides, fallbackSrc }) {
             type="button"
             onClick={next}
             aria-label="Next slide"
-            className="hidden sm:flex absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/40 text-white items-center justify-center hover:bg-black/60 transition-colors text-xl"
+            className="flex absolute right-3 md:right-6 top-1/2 -translate-y-1/2 w-10 h-10 md:w-12 md:h-12 rounded-full bg-black/40 text-white items-center justify-center hover:bg-black/60 transition-colors text-xl z-10"
           >
             ›
           </button>
-          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5">
+          <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-1.5 z-10">
             {slides.map((s, i) => (
               <button
                 key={s.id}

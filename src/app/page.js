@@ -135,20 +135,25 @@ export default async function ShopPage({ searchParams }) {
   return (
     <div>
       {/* Hero — a big, full-bleed advertisement carousel (Eric: "Carousels
-          should be very big to be used for advertisement") with the site's
-          static headline/CTA overlaid on top of it, rather than sitting
-          beside a small product card. */}
-      <section className="relative overflow-hidden text-cream min-h-[780px] sm:min-h-[720px]">
-        <HeroCarousel slides={heroSlides} fallbackSrc="/images/rolen-logo.png" />
-        <div className="relative z-10 container-page pt-14 md:pt-24 w-full">
+          should be very big to be used for advertisement"), kept as a clean
+          media-only showcase with no text drawn over it. Eric shared a
+          reference site's banner and said "look at how this is appearing
+          well... don't show any writings on the carousel" — so the site's
+          headline/CTA now sit in their own band directly below the media,
+          instead of layered on top of it. */}
+      <section className="bg-ink text-cream">
+        <div className="relative overflow-hidden h-[380px] sm:h-[500px] md:h-[600px] lg:h-[680px]">
+          <HeroCarousel slides={heroSlides} fallbackSrc="/images/rolen-logo.png" />
+        </div>
+        <div className="container-page py-12 md:py-16">
           <div className="max-w-md">
             <Reveal as="p" className="uppercase tracking-[0.2em] text-xs text-gold-light mb-4">
               Rolen Studio &middot; {settings.city || 'Accra'}, {settings.country || 'Ghana'}
             </Reveal>
-            <Reveal as="h1" delay={0.08} className="font-display text-4xl md:text-5xl leading-tight mb-6 drop-shadow-lg">
+            <Reveal as="h1" delay={0.08} className="font-display text-4xl md:text-5xl leading-tight mb-6">
               Wear the story <span className="gold-gradient-text">we craft</span>.
             </Reveal>
-            <Reveal as="p" delay={0.16} className="text-cream/85 mb-8 max-w-md drop-shadow">
+            <Reveal as="p" delay={0.16} className="text-cream/85 mb-8 max-w-md">
               Kente ceremonial wear, bridal gowns, custom couture and our signature ready-to-wear lines —
               every piece designed and made in our own studio, by the same house that trains Ghana&apos;s
               next fashion designers.
