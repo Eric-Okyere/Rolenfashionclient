@@ -134,19 +134,23 @@ export default async function ShopPage({ searchParams }) {
 
   return (
     <div>
-      {/* Hero — a big, full-bleed advertisement carousel (Eric: "Carousels
-          should be very big to be used for advertisement"), kept as a clean
+      {/* Hero — a big advertisement carousel (Eric: "Carousels should be
+          very big to be used for advertisement"), kept as a clean
           media-only showcase with no text drawn over it. Eric shared a
           reference site's banner and said "look at how this is appearing
           well... don't show any writings on the carousel" — so the site's
           headline/CTA now sit in their own band directly below the media,
-          instead of layered on top of it. Sized tall — Eric: "Increase the
-          height of the carousel. Let the whole picture show instead of
-          half" — a short box was squeezing a tall or wide photo down small
-          inside MediaCover's letterboxing; a much taller box lets the same
-          uncropped photo/video render at a real, full size. */}
+          instead of layered on top of it. Eric later asked to "show 3
+          products in the carousel at a time" — HeroCarousel now renders up
+          to 3 cards side by side (1 on phones, 2 on tablets) instead of one
+          full-bleed slide, so the box height below was brought down from
+          the previous single-slide sizing (which ran up to 920px tall) to
+          something proportioned for 3 cards in a row — the old height would
+          have made each of the 3 photos a very tall, narrow sliver. Still
+          generous and full-width; MediaCover still guarantees every photo
+          renders fully uncropped inside its card either way. */}
       <section className="bg-ink text-cream">
-        <div className="relative overflow-hidden h-[520px] sm:h-[70vh] md:h-[80vh] lg:h-[85vh] sm:min-h-[600px] lg:max-h-[920px]">
+        <div className="relative overflow-hidden h-[420px] sm:h-[440px] md:h-[480px] lg:h-[520px]">
           <HeroCarousel slides={heroSlides} fallbackSrc="/images/rolen-logo.png" />
         </div>
         <div className="container-page py-12 md:py-16">
