@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { apiFetch, mediaUrl } from '@/lib/api';
+import MediaCover from '@/components/MediaCover';
 
 // The shop's current brand-line structure. Older values (Nuptials, Kente,
 // Exclusives, Melange by Rolen, Ready-to-Wear, Bridal, etc.) still work for
@@ -15,6 +16,8 @@ export default function AdminGalleryPage() {
   const [form, setForm] = useState({ title: '', description: '', category: 'Other', price: '', isFeatured: false });
   const [imageFiles, setImageFiles] = useState([]);
   const [videoFile, setVideoFile] = useState(null);
+  const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -24,6 +27,29 @@ export default function AdminGalleryPage() {
   }
   // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load on mount
   useEffect(() => { load(); }, []);
+
+  // Eric: "let the pic show very nice in the form before post" — preview
+  // every chosen photo (and the video, if any) the same uncropped way the
+  // product's own lightbox will show it, using local blob: URLs so nothing
+  // uploads just to preview. Recreated whenever the file selection changes,
+  // with the previous batch of URLs revoked so nothing leaks.
+  useEffect(() => {
+    const urls = imageFiles.map((f) => URL.createObjectURL(f));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing browser object URLs to the chosen Files, not derivable at render time
+    setImagePreviewUrls(urls);
+    return () => urls.forEach((u) => URL.revokeObjectURL(u));
+  }, [imageFiles]);
+  useEffect(() => {
+    if (!videoFile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clearing the preview when the selection is removed, not derivable at render time
+      setVideoPreviewUrl(null);
+      return undefined;
+    }
+    const url = URL.createObjectURL(videoFile);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing a browser object URL to the chosen File, not derivable at render time
+    setVideoPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [videoFile]);
 
   function handlePhotosChosen(fileList) {
     const files = Array.from(fileList);
@@ -126,10 +152,20 @@ export default function AdminGalleryPage() {
             {imageFiles.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {imageFiles.map((f, i) => (
-                  <span key={`${f.name}-${i}`} className="inline-flex items-center gap-1.5 text-xs bg-black/5 rounded-full pl-2.5 pr-1 py-1">
-                    {f.name.length > 18 ? `${f.name.slice(0, 15)}…` : f.name}
-                    <button type="button" onClick={() => removePhoto(i)} className="w-4 h-4 rounded-full bg-black/10 hover:bg-black/20 text-[10px] leading-4">×</button>
-                  </span>
+                  <div key={`${f.name}-${i}`} className="relative w-20 h-20 shrink-0">
+                    <MediaCover src={imagePreviewUrls[i]} alt={f.name} className="w-full h-full rounded-lg" />
+                    <button
+                      type="button"
+                      onClick={() => removePhoto(i)}
+                      aria-label={`Remove ${f.name}`}
+                      className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-ink text-white text-xs leading-5 hover:bg-black"
+                    >
+                      ×
+                    </button>
+                    {i === 0 && (
+                      <span className="absolute bottom-1 left-1 bg-black/70 text-white text-[9px] px-1.5 py-0.5 rounded-full">Cover</span>
+                    )}
+                  </div>
                 ))}
               </div>
             )}
@@ -137,6 +173,9 @@ export default function AdminGalleryPage() {
           <label className="text-sm block">
             <span className="block mb-1 font-medium">Product Video (optional)</span>
             <input type="file" accept="video/*" onChange={(e) => setVideoFile(e.target.files[0])} className="w-full text-sm" />
+            {videoPreviewUrl && (
+              <MediaCover src={videoPreviewUrl} type="video" alt="Video preview" className="w-full aspect-video rounded-lg mt-2" />
+            )}
           </label>
         </div>
         <button type="submit" disabled={loading} className="btn-gold">{loading ? 'Uploading…' : 'Post Product'}</button>

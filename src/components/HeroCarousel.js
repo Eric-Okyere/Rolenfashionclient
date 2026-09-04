@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useCallback, useEffect, useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import MediaCover from '@/components/MediaCover';
 
 const AUTOPLAY_MS = 6000;
 
@@ -63,20 +64,18 @@ export default function HeroCarousel({ slides, fallbackSrc }) {
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="absolute inset-0"
         >
-          {slide.type === 'video' ? (
-            <video
-              src={slide.src}
-              poster={slide.poster}
-              autoPlay
-              muted
-              loop
-              playsInline
-              className="w-full h-full object-cover"
-            />
-          ) : (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={slide.src} alt={slide.title || 'Rolen'} className="w-full h-full object-cover" />
-          )}
+          {/* MediaCover shows the whole photo/video uncropped (a tall shot —
+              a full gown, a standing couple, like Eric's kente photo — was
+              getting its head cropped off by a plain `object-cover` fill on
+              this wide, short banner: "the pictures in the carousel is not
+              showing well"). */}
+          <MediaCover
+            src={slide.src}
+            type={slide.type}
+            poster={slide.poster}
+            alt={slide.title || 'Rolen'}
+            className="absolute inset-0"
+          />
         </motion.div>
       </AnimatePresence>
 

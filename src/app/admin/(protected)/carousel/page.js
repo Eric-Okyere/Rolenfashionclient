@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { apiFetch, mediaUrl } from '@/lib/api';
+import MediaCover from '@/components/MediaCover';
 
 // Same 5 brand lines used on the Gallery form — a slide's CTA can point at
 // one of them, or at "None" for a general "shop everything" slide.
@@ -14,6 +15,8 @@ export default function AdminCarouselPage() {
   const [form, setForm] = useState(emptyForm);
   const [imageFile, setImageFile] = useState(null);
   const [videoFile, setVideoFile] = useState(null);
+  const [imagePreviewUrl, setImagePreviewUrl] = useState(null);
+  const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -23,6 +26,34 @@ export default function AdminCarouselPage() {
   }
   // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load on mount
   useEffect(() => { load(); }, []);
+
+  // Eric: "let the pic show very nice in the form before post" — preview the
+  // chosen file exactly the way it'll actually render on the live carousel
+  // (same MediaCover treatment), using a local blob: URL so nothing is
+  // uploaded just to preview it. The URL is revoked whenever the selection
+  // changes or the form resets, so switching files never leaks the old blob.
+  useEffect(() => {
+    if (!imageFile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clearing the preview when the selection is removed, not derivable at render time
+      setImagePreviewUrl(null);
+      return undefined;
+    }
+    const url = URL.createObjectURL(imageFile);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing a browser object URL to the chosen File, not derivable at render time
+    setImagePreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [imageFile]);
+  useEffect(() => {
+    if (!videoFile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clearing the preview when the selection is removed, not derivable at render time
+      setVideoPreviewUrl(null);
+      return undefined;
+    }
+    const url = URL.createObjectURL(videoFile);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing a browser object URL to the chosen File, not derivable at render time
+    setVideoPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [videoFile]);
 
   async function handleUpload(e) {
     e.preventDefault();
@@ -111,6 +142,19 @@ export default function AdminCarouselPage() {
           </label>
         </div>
         <p className="text-xs text-muted -mt-2">Add a photo or a video — not both. A slide with a video plays it automatically, muted.</p>
+
+        {(imagePreviewUrl || videoPreviewUrl) && (
+          <div>
+            <span className="block mb-1.5 text-sm font-medium">Preview — this is how it&apos;ll look on the homepage banner</span>
+            <MediaCover
+              src={imagePreviewUrl || videoPreviewUrl}
+              type={videoPreviewUrl ? 'video' : 'image'}
+              alt="Slide preview"
+              className="w-full aspect-video rounded-lg"
+            />
+          </div>
+        )}
+
         <button type="submit" disabled={loading} className="btn-gold">{loading ? 'Uploading…' : 'Add Slide'}</button>
       </form>
 
@@ -118,12 +162,13 @@ export default function AdminCarouselPage() {
         {posts.map((post) => (
           <div key={post._id} className="card overflow-hidden">
             <div className="aspect-video bg-black/5 relative">
-              {post.videoUrl ? (
-                <video src={mediaUrl(post.videoUrl)} muted className="w-full h-full object-cover" />
-              ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={mediaUrl(post.imageUrl)} alt={post.title || 'Ad slide'} className="w-full h-full object-cover" />
-              )}
+              <MediaCover
+                src={mediaUrl(post.videoUrl || post.imageUrl)}
+                type={post.videoUrl ? 'video' : 'image'}
+                poster={post.imageUrl ? mediaUrl(post.imageUrl) : undefined}
+                alt={post.title || 'Ad slide'}
+                className="absolute inset-0"
+              />
               {post.videoUrl && (
                 <span className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">▶ Video</span>
               )}
