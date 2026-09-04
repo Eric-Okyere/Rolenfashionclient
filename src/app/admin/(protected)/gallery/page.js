@@ -3,7 +3,12 @@
 import { useEffect, useState } from 'react';
 import { apiFetch, mediaUrl } from '@/lib/api';
 
-const categories = ['Ready-to-Wear', 'Bridal', 'Accessories', 'Student Work', 'Runway', 'Other'];
+// The shop's current brand-line structure. Older values (Nuptials, Kente,
+// Exclusives, Melange by Rolen, Ready-to-Wear, Bridal, etc.) still work for
+// any product already saved with one of them — they're just not offered
+// here any more since the shop now organizes around these five lines
+// instead (see Gallery.js for why the server enum still lists every set).
+const categories = ['Rolen Kente', 'Rolen Bridals', 'Rolen Custom', 'Rolen Ready-to-Wear', 'Rolen Bespoke', 'Other'];
 
 export default function AdminGalleryPage() {
   const [items, setItems] = useState([]);

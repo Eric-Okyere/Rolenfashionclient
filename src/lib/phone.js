@@ -20,6 +20,7 @@ export function telHref(num) {
   return `tel:+233${localDigits(num)}`;
 }
 
-export function waHref(num) {
-  return `https://wa.me/233${localDigits(num)}`;
+export function waHref(num, message) {
+  const base = `https://wa.me/233${localDigits(num)}`;
+  return message ? `${base}?text=${encodeURIComponent(message)}` : base;
 }

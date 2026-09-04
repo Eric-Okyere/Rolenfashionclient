@@ -7,11 +7,16 @@ import { usePathname } from 'next/navigation';
 import { AnimatePresence, motion } from 'framer-motion';
 import { mediaUrl } from '@/lib/api';
 
+// Eric: "let the shop be the main page and the school in the navbar" — the
+// Shop now owns "/" (see app/page.js), and what used to be the homepage
+// lives at /school. Kept an explicit "Shop" link here too (not just the
+// logo) since a visitor browsing /school, /courses, etc. still needs one
+// click back to the product catalog specifically.
 const links = [
-  { href: '/', label: 'Home' },
+  { href: '/', label: 'Shop' },
+  { href: '/school', label: 'School' },
   { href: '/about', label: 'About' },
   { href: '/courses', label: 'Courses' },
-  { href: '/gallery', label: 'Gallery & Shop' },
   { href: '/admissions', label: 'Admissions' },
   { href: '/contact', label: 'Contact' },
 ];

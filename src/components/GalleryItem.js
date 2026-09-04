@@ -3,11 +3,20 @@
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { mediaUrl } from '@/lib/api';
+import { splitNumbers, waHref } from '@/lib/phone';
+import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 
-export default function GalleryItem({ item }) {
+// `whatsapp` (Settings.whatsapp) is optional — pages that just want a plain
+// photo/video card (e.g. the School page's small preview strip) can omit it
+// and simply won't render the order button. Pages selling the piece (the
+// Shop homepage) pass it through so a shopper can go from "I like this" to
+// "I've messaged about it" in one tap, without a full checkout flow.
+export default function GalleryItem({ item, whatsapp }) {
   const [open, setOpen] = useState(false);
   const [activeMedia, setActiveMedia] = useState('image');
   const hasVideo = Boolean(item.videoUrl);
+  const orderNumber = splitNumbers(whatsapp)[0];
+  const orderMessage = `Hi Rolen! I'd like to order: ${item.title}${item.price ? ` (GHS ${Number(item.price).toLocaleString()})` : ''}.`;
 
   function openLightbox() {
     setActiveMedia('image');
@@ -81,12 +90,26 @@ export default function GalleryItem({ item }) {
                 <img src={mediaUrl(item.imageUrl)} alt={item.title} className="w-full max-h-[70vh] object-contain rounded-lg" />
               )}
 
-              <div className="text-cream mt-3 flex items-center justify-between">
+              <div className="text-cream mt-3 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="font-medium">{item.title}</p>
-                  {item.description && <p className="text-sm text-cream/70">{item.description}</p>}
+                  {item.description && <p className="text-sm text-cream/70 max-w-md">{item.description}</p>}
                 </div>
-                {item.price && <p className="text-gold-light font-semibold">GHS {Number(item.price).toLocaleString()}</p>}
+                <div className="flex items-center gap-3">
+                  {item.price && <p className="text-gold-light font-semibold whitespace-nowrap">GHS {Number(item.price).toLocaleString()}</p>}
+                  {orderNumber && (
+                    <a
+                      href={waHref(orderNumber, orderMessage)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-1.5 bg-[#25D366] text-white text-xs font-semibold px-3.5 py-2 rounded-full hover:brightness-105 transition-[filter] whitespace-nowrap"
+                    >
+                      <WhatsAppIcon className="w-3.5 h-3.5" />
+                      Order via WhatsApp
+                    </a>
+                  )}
+                </div>
               </div>
               <button onClick={() => setOpen(false)} className="mt-3 text-cream/70 text-sm underline">
                 Close
