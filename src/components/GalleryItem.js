@@ -11,7 +11,12 @@ import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 // and simply won't render the order button. Pages selling the piece (the
 // Shop homepage) pass it through so a shopper can go from "I like this" to
 // "I've messaged about it" in one tap, without a full checkout flow.
-export default function GalleryItem({ item, whatsapp }) {
+// `isNew` is computed by the caller (a server component, via lib/time's
+// isRecent()) from the product's own createdAt timestamp — not an
+// admin-set flag, so it's always accurate — rather than here, since calling
+// Date.now() during a client component's render is treated as an impure,
+// unstable read by this project's lint rules.
+export default function GalleryItem({ item, whatsapp, isNew = false }) {
   const [open, setOpen] = useState(false);
   const [activeMedia, setActiveMedia] = useState('image');
   const hasVideo = Boolean(item.videoUrl);
@@ -41,6 +46,9 @@ export default function GalleryItem({ item, whatsapp }) {
         </div>
         {hasVideo && (
           <span className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">▶ Video</span>
+        )}
+        {isNew && (
+          <span className="absolute top-2 left-2 bg-gold text-ink text-[10px] font-semibold px-2 py-0.5 rounded-full">NEW</span>
         )}
       </button>
 

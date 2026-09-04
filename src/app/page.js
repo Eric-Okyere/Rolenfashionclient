@@ -1,10 +1,12 @@
 import Link from 'next/link';
 import { safeFetch, mediaUrl } from '@/lib/api';
 import { splitNumbers, waHref } from '@/lib/phone';
+import { isRecent } from '@/lib/time';
 import GalleryItem from '@/components/GalleryItem';
+import TestimonialCard from '@/components/TestimonialCard';
+import HeroCarousel from '@/components/HeroCarousel';
 import Reveal from '@/components/motion/Reveal';
 import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
-import HeroVisual from '@/components/motion/HeroVisual';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 
 // The Shop is now the site's homepage — Eric: "let the shop be the main
@@ -58,6 +60,68 @@ const CATEGORIES = [
 
 const FILTER_CHIPS = ['All', ...CATEGORIES.map((c) => c.key), 'Other'];
 
+// Picks a handful of published products (one per category first, for
+// variety, then filling any remaining slots with other featured pieces) to
+// drive the hero carousel — Eric: "carousel showcasing both videos and
+// picture of the products." A video-carrying item is preferred as each
+// category's pick so the carousel naturally mixes both media types instead
+// of only ever showing photos.
+function buildHeroSlides(items) {
+  const pool = (items || []).filter((i) => i.imageUrl);
+  if (!pool.length) return [];
+
+  const byCategory = new Map();
+  for (const item of pool) {
+    if (!byCategory.has(item.category)) byCategory.set(item.category, []);
+    byCategory.get(item.category).push(item);
+  }
+
+  const picks = [];
+  for (const catItems of byCategory.values()) {
+    const pick =
+      catItems.find((i) => i.isFeatured && i.videoUrl) ||
+      catItems.find((i) => i.isFeatured) ||
+      catItems.find((i) => i.videoUrl) ||
+      catItems[0];
+    picks.push(pick);
+  }
+
+  const pickedIds = new Set(picks.map((i) => i._id));
+  for (const item of pool) {
+    if (picks.length >= 6) break;
+    if (item.isFeatured && !pickedIds.has(item._id)) {
+      picks.push(item);
+      pickedIds.add(item._id);
+    }
+  }
+
+  return picks.slice(0, 6).map((item) => ({
+    id: item._id,
+    type: item.videoUrl ? 'video' : 'image',
+    src: item.videoUrl ? mediaUrl(item.videoUrl) : mediaUrl(item.imageUrl),
+    poster: mediaUrl(item.imageUrl),
+    title: item.title,
+    category: item.category,
+    price: item.price,
+    href: `/?category=${encodeURIComponent(item.category)}#collection`,
+  }));
+}
+
+// One representative photo per category card — Eric: "every collection
+// must have picture or video." A product's photo is required by the
+// Gallery schema (the video is only ever an optional companion), so this
+// always has a real image to show whenever the category has any published
+// product at all; a category with no products yet gets an honest "coming
+// soon" placeholder instead of a broken image.
+function buildCategoryCovers(items) {
+  const covers = new Map();
+  for (const cat of CATEGORIES) {
+    const catItems = (items || []).filter((i) => i.category === cat.key && i.imageUrl);
+    covers.set(cat.key, catItems.find((i) => i.isFeatured) || catItems[0] || null);
+  }
+  return covers;
+}
+
 export default async function ShopPage({ searchParams }) {
   const params = await searchParams;
   const category = params?.category && params.category !== 'All' ? params.category : undefined;
@@ -67,22 +131,31 @@ export default async function ShopPage({ searchParams }) {
   if (videoOnly) qs.set('video', '1');
   const query = qs.toString() ? `?${qs.toString()}` : '';
 
-  const [{ items }, settingsData] = await Promise.all([
+  const [{ items }, settingsData, testimonialsData] = await Promise.all([
     safeFetch(`/api/gallery${query}`, { items: [] }),
     safeFetch('/api/settings', { settings: {} }),
+    safeFetch('/api/testimonials', { testimonials: [] }),
   ]);
 
   const settings = settingsData.settings || {};
   const whatsapp = settings.whatsapp;
   const orderNumber = splitNumbers(whatsapp)[0];
+  const testimonials = (testimonialsData.testimonials || []).slice(0, 3);
+
+  // The hero carousel and the category-showcase cover photos are page
+  // furniture that should always reflect the FULL catalog, not just the
+  // active filter — reuse `items` directly when the view is already
+  // unfiltered (the common case, and avoids a redundant second request),
+  // and only fetch the unfiltered set separately when a category/video
+  // filter is active and `items` is just that narrower slice.
+  const showcaseItems = !category && !videoOnly ? items || [] : (await safeFetch('/api/gallery', { items: [] })).items || [];
 
   // The "Featured" strip only makes sense on the unfiltered view (it's a
-  // curated cross-section of every category) — reuse the already-fetched
-  // `items` rather than firing a second request; when a filter is active,
-  // items *is* that unfiltered set's absence, so featured is simply empty
-  // and the section hides itself below.
-  const featured = !category && !videoOnly ? (items || []).filter((i) => i.isFeatured).slice(0, 4) : [];
-  const heroImage = featured[0] || (items || [])[0];
+  // curated cross-section of every category) — it hides itself below when
+  // a filter is active.
+  const featured = !category && !videoOnly ? showcaseItems.filter((i) => i.isFeatured).slice(0, 4) : [];
+  const heroSlides = buildHeroSlides(showcaseItems);
+  const coverByCategory = buildCategoryCovers(showcaseItems);
 
   return (
     <div>
@@ -115,7 +188,7 @@ export default async function ShopPage({ searchParams }) {
               )}
             </Reveal>
           </div>
-          <HeroVisual src={heroImage ? mediaUrl(heroImage.imageUrl) : '/images/rolen-logo.png'} alt={heroImage?.title || 'Rolen'} />
+          <HeroCarousel slides={heroSlides} fallbackSrc="/images/rolen-logo.png" fallbackAlt="Rolen" />
         </div>
       </section>
 
@@ -135,6 +208,47 @@ export default async function ShopPage({ searchParams }) {
         </div>
       </section>
 
+      {/* How ordering works */}
+      <section className="bg-white border-b border-black/5">
+        <div className="container-page py-20">
+          <Reveal as="p" className="uppercase tracking-[0.2em] text-xs text-gold-dark mb-3 text-center">
+            Simple &amp; Direct
+          </Reveal>
+          <Reveal as="h2" delay={0.05} className="font-display text-3xl text-center mb-12">
+            How Ordering Works
+          </Reveal>
+          <StaggerGroup className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                step: '1',
+                title: 'Browse the Collection',
+                body: 'Explore our lines below and open any piece you love — photos and video, right in the shop.',
+              },
+              {
+                step: '2',
+                title: 'Message Us on WhatsApp',
+                body: "Tap “Order via WhatsApp” on the piece — we'll confirm pricing, sizing and timeline with you directly.",
+              },
+              {
+                step: '3',
+                title: 'Collect Your Piece',
+                body: "Once it's ready, visit the studio to collect it — or ask us about custom fittings along the way.",
+              },
+            ].map((s) => (
+              <StaggerItem key={s.step}>
+                <div className="text-center">
+                  <div className="w-12 h-12 rounded-full bg-gold text-ink font-display text-lg flex items-center justify-center mx-auto mb-4">
+                    {s.step}
+                  </div>
+                  <h3 className="font-semibold mb-2">{s.title}</h3>
+                  <p className="text-sm text-ink/70">{s.body}</p>
+                </div>
+              </StaggerItem>
+            ))}
+          </StaggerGroup>
+        </div>
+      </section>
+
       {/* Category showcase */}
       <section className="container-page py-20">
         <Reveal as="p" className="uppercase tracking-[0.2em] text-xs text-gold-dark mb-3 text-center">
@@ -144,40 +258,65 @@ export default async function ShopPage({ searchParams }) {
           Shop by Collection
         </Reveal>
         <StaggerGroup className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {CATEGORIES.map((cat) => (
-            <StaggerItem key={cat.key} className="h-full">
-              <a
-                href={`/?category=${encodeURIComponent(cat.key)}#collection`}
-                className="card group flex flex-col h-full p-8 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl motion-reduce:hover:translate-y-0"
-              >
-                <h3 className="font-display text-2xl mb-2 group-hover:text-gold-dark transition-colors">{cat.key}</h3>
-                <p className="text-sm italic text-ink/70 mb-4">&ldquo;{cat.blurb}&rdquo;</p>
-
-                {cat.tags && (
-                  <div className="flex flex-wrap gap-1.5 mb-4">
-                    {cat.tags.map((tag) => (
-                      <span key={tag} className="text-[11px] px-2.5 py-1 rounded-full bg-gold-light/15 text-ink/60">
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-                )}
-
-                {cat.subBrands && (
-                  <div className="space-y-2 mb-4">
-                    {cat.subBrands.map((sub) => (
-                      <div key={sub.name} className="text-sm">
-                        <span className="font-semibold text-ink/80">{sub.name}</span>
-                        <span className="text-ink/60 italic"> — &ldquo;{sub.blurb}&rdquo;</span>
+          {CATEGORIES.map((cat) => {
+            const cover = coverByCategory.get(cat.key);
+            return (
+              <StaggerItem key={cat.key} className="h-full">
+                <a
+                  href={`/?category=${encodeURIComponent(cat.key)}#collection`}
+                  className="card group flex flex-col h-full overflow-hidden transition-all duration-300 hover:-translate-y-1 hover:shadow-xl motion-reduce:hover:translate-y-0"
+                >
+                  <div className="relative aspect-[4/3] overflow-hidden bg-gold-light/10">
+                    {cover ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={mediaUrl(cover.imageUrl)}
+                        alt={cat.key}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                        <span className="text-xs text-ink/40 uppercase tracking-wide">Photos coming soon</span>
                       </div>
-                    ))}
+                    )}
+                    {cover?.videoUrl && (
+                      <span className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">
+                        ▶ Video
+                      </span>
+                    )}
                   </div>
-                )}
 
-                <span className="text-sm font-semibold text-gold-dark mt-auto">Shop {cat.key} →</span>
-              </a>
-            </StaggerItem>
-          ))}
+                  <div className="flex flex-col flex-1 p-8">
+                    <h3 className="font-display text-2xl mb-2 group-hover:text-gold-dark transition-colors">{cat.key}</h3>
+                    <p className="text-sm italic text-ink/70 mb-4">&ldquo;{cat.blurb}&rdquo;</p>
+
+                    {cat.tags && (
+                      <div className="flex flex-wrap gap-1.5 mb-4">
+                        {cat.tags.map((tag) => (
+                          <span key={tag} className="text-[11px] px-2.5 py-1 rounded-full bg-gold-light/15 text-ink/60">
+                            {tag}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {cat.subBrands && (
+                      <div className="space-y-2 mb-4">
+                        {cat.subBrands.map((sub) => (
+                          <div key={sub.name} className="text-sm">
+                            <span className="font-semibold text-ink/80">{sub.name}</span>
+                            <span className="text-ink/60 italic"> — &ldquo;{sub.blurb}&rdquo;</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+
+                    <span className="text-sm font-semibold text-gold-dark mt-auto">Shop {cat.key} →</span>
+                  </div>
+                </a>
+              </StaggerItem>
+            );
+          })}
         </StaggerGroup>
       </section>
 
@@ -194,7 +333,7 @@ export default async function ShopPage({ searchParams }) {
             <StaggerGroup className="grid grid-cols-2 md:grid-cols-4 gap-4">
               {featured.map((item) => (
                 <StaggerItem key={item._id}>
-                  <GalleryItem item={item} whatsapp={whatsapp} />
+                  <GalleryItem item={item} whatsapp={whatsapp} isNew={isRecent(item.createdAt)} />
                 </StaggerItem>
               ))}
             </StaggerGroup>
@@ -248,7 +387,7 @@ export default async function ShopPage({ searchParams }) {
         <StaggerGroup className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {(items || []).map((item) => (
             <StaggerItem key={item._id}>
-              <GalleryItem item={item} whatsapp={whatsapp} />
+              <GalleryItem item={item} whatsapp={whatsapp} isNew={isRecent(item.createdAt)} />
             </StaggerItem>
           ))}
         </StaggerGroup>
@@ -256,6 +395,27 @@ export default async function ShopPage({ searchParams }) {
           <p className="text-center text-muted py-10">No items in this category yet — check back soon.</p>
         )}
       </section>
+
+      {/* Testimonials */}
+      {testimonials.length > 0 && (
+        <section className="bg-gold-light/10 border-y border-black/5">
+          <div className="container-page py-20">
+            <Reveal as="p" className="uppercase tracking-[0.2em] text-xs text-gold-dark mb-3 text-center">
+              Voices
+            </Reveal>
+            <Reveal as="h2" delay={0.08} className="font-display text-3xl text-center mb-10">
+              What People Say
+            </Reveal>
+            <StaggerGroup className="grid md:grid-cols-3 gap-6">
+              {testimonials.map((t) => (
+                <StaggerItem key={t._id} className="h-full">
+                  <TestimonialCard testimonial={t} />
+                </StaggerItem>
+              ))}
+            </StaggerGroup>
+          </div>
+        </section>
+      )}
 
       {/* Order help / cross-sell to the school */}
       <section className="container-page pb-20">

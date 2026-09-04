@@ -15,3 +15,14 @@ export function timeAgo(date) {
   if (days < 7) return `${days}d ago`;
   return d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
 }
+
+// True if `date` is within the last `days` days — used for a "NEW" badge on
+// recently posted products. Deliberately called from server components
+// (Date.now() there is a one-time, per-request read, not a render-time
+// impurity issue) rather than inside the client-side GalleryItem card, so
+// the value is computed once and passed down as a plain prop.
+export function isRecent(date, days = 14) {
+  if (!date) return false;
+  const d = date instanceof Date ? date : new Date(date);
+  return Date.now() - d.getTime() < days * 24 * 60 * 60 * 1000;
+}
