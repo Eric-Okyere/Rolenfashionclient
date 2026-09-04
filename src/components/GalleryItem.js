@@ -19,13 +19,29 @@ import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 export default function GalleryItem({ item, whatsapp, isNew = false }) {
   const [open, setOpen] = useState(false);
   const [activeMedia, setActiveMedia] = useState('image');
+  const [photoIndex, setPhotoIndex] = useState(0);
   const hasVideo = Boolean(item.videoUrl);
+  // Older products saved before the 5-photo field existed just have an empty
+  // imageUrls array — fall back to the single imageUrl so they still browse
+  // correctly (as one photo, no strip/arrows), same "don't require a
+  // migration" pattern used elsewhere in this project.
+  const photos = item.imageUrls?.length ? item.imageUrls : [item.imageUrl];
+  const hasMultiplePhotos = photos.length > 1;
   const orderNumber = splitNumbers(whatsapp)[0];
   const orderMessage = `Hi Rolen! I'd like to order: ${item.title}${item.price ? ` (GHS ${Number(item.price).toLocaleString()})` : ''}.`;
 
   function openLightbox() {
     setActiveMedia('image');
+    setPhotoIndex(0);
     setOpen(true);
+  }
+
+  function nextPhoto() {
+    setPhotoIndex((i) => (i + 1) % photos.length);
+  }
+
+  function prevPhoto() {
+    setPhotoIndex((i) => (i - 1 + photos.length) % photos.length);
   }
 
   return (
@@ -49,6 +65,9 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
         )}
         {isNew && (
           <span className="absolute top-2 left-2 bg-gold text-ink text-[10px] font-semibold px-2 py-0.5 rounded-full">NEW</span>
+        )}
+        {hasMultiplePhotos && (
+          <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">1/{photos.length}</span>
         )}
       </button>
 
@@ -94,8 +113,55 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
               {activeMedia === 'video' && hasVideo ? (
                 <video src={mediaUrl(item.videoUrl)} controls autoPlay className="w-full max-h-[70vh] rounded-lg" />
               ) : (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={mediaUrl(item.imageUrl)} alt={item.title} className="w-full max-h-[70vh] object-contain rounded-lg" />
+                <div className="relative">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={mediaUrl(photos[photoIndex])}
+                    alt={`${item.title}${hasMultiplePhotos ? ` — photo ${photoIndex + 1} of ${photos.length}` : ''}`}
+                    className="w-full max-h-[70vh] object-contain rounded-lg"
+                  />
+                  {hasMultiplePhotos && (
+                    <>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); prevPhoto(); }}
+                        aria-label="Previous photo"
+                        className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                      >
+                        ‹
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); nextPhoto(); }}
+                        aria-label="Next photo"
+                        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                      >
+                        ›
+                      </button>
+                      <span className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full">
+                        {photoIndex + 1}/{photos.length}
+                      </span>
+                    </>
+                  )}
+                </div>
+              )}
+
+              {hasMultiplePhotos && activeMedia === 'image' && (
+                <div className="flex gap-2 mt-2 justify-center flex-wrap">
+                  {photos.map((p, i) => (
+                    <button
+                      key={p}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setPhotoIndex(i); }}
+                      className={`w-12 h-12 rounded-md overflow-hidden border-2 transition-colors ${
+                        i === photoIndex ? 'border-gold' : 'border-transparent opacity-70 hover:opacity-100'
+                      }`}
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={mediaUrl(p)} alt="" className="w-full h-full object-cover" />
+                    </button>
+                  ))}
+                </div>
               )}
 
               <div className="text-cream mt-3 flex flex-wrap items-center justify-between gap-3">

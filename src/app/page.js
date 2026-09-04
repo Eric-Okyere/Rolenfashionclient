@@ -60,51 +60,25 @@ const CATEGORIES = [
 
 const FILTER_CHIPS = ['All', ...CATEGORIES.map((c) => c.key), 'Other'];
 
-// Picks a handful of published products (one per category first, for
-// variety, then filling any remaining slots with other featured pieces) to
-// drive the hero carousel — Eric: "carousel showcasing both videos and
-// picture of the products." A video-carrying item is preferred as each
-// category's pick so the carousel naturally mixes both media types instead
-// of only ever showing photos.
-function buildHeroSlides(items) {
-  const pool = (items || []).filter((i) => i.imageUrl);
-  if (!pool.length) return [];
-
-  const byCategory = new Map();
-  for (const item of pool) {
-    if (!byCategory.has(item.category)) byCategory.set(item.category, []);
-    byCategory.get(item.category).push(item);
-  }
-
-  const picks = [];
-  for (const catItems of byCategory.values()) {
-    const pick =
-      catItems.find((i) => i.isFeatured && i.videoUrl) ||
-      catItems.find((i) => i.isFeatured) ||
-      catItems.find((i) => i.videoUrl) ||
-      catItems[0];
-    picks.push(pick);
-  }
-
-  const pickedIds = new Set(picks.map((i) => i._id));
-  for (const item of pool) {
-    if (picks.length >= 6) break;
-    if (item.isFeatured && !pickedIds.has(item._id)) {
-      picks.push(item);
-      pickedIds.add(item._id);
-    }
-  }
-
-  return picks.slice(0, 6).map((item) => ({
-    id: item._id,
-    type: item.videoUrl ? 'video' : 'image',
-    src: item.videoUrl ? mediaUrl(item.videoUrl) : mediaUrl(item.imageUrl),
-    poster: mediaUrl(item.imageUrl),
-    title: item.title,
-    category: item.category,
-    price: item.price,
-    href: `/?category=${encodeURIComponent(item.category)}#collection`,
-  }));
+// Maps admin-managed ad slides (CarouselPost — see server/src/models/
+// CarouselPost.js) to the shape HeroCarousel renders. This is deliberately
+// NOT auto-derived from the product catalog — Eric: "Carousel post should be
+// different from product post... Carousels should be very big to be used
+// for advertisement" — so what shows in the big homepage banner is exactly
+// what he posts to the Ad Carousel admin page, in the order he sets.
+function buildAdSlides(posts) {
+  return (posts || [])
+    .filter((p) => p.imageUrl || p.videoUrl)
+    .map((p) => ({
+      id: p._id,
+      type: p.videoUrl ? 'video' : 'image',
+      src: p.videoUrl ? mediaUrl(p.videoUrl) : mediaUrl(p.imageUrl),
+      poster: p.imageUrl ? mediaUrl(p.imageUrl) : undefined,
+      title: p.title,
+      caption: p.caption,
+      ctaLabel: p.ctaLabel || 'Shop Now',
+      href: p.linkCategory ? `/?category=${encodeURIComponent(p.linkCategory)}#collection` : '#collection',
+    }));
 }
 
 // One representative photo per category card — Eric: "every collection
@@ -131,45 +105,50 @@ export default async function ShopPage({ searchParams }) {
   if (videoOnly) qs.set('video', '1');
   const query = qs.toString() ? `?${qs.toString()}` : '';
 
-  const [{ items }, settingsData, testimonialsData] = await Promise.all([
+  const [{ items }, settingsData, testimonialsData, carouselData] = await Promise.all([
     safeFetch(`/api/gallery${query}`, { items: [] }),
     safeFetch('/api/settings', { settings: {} }),
     safeFetch('/api/testimonials', { testimonials: [] }),
+    safeFetch('/api/carousel', { posts: [] }),
   ]);
 
   const settings = settingsData.settings || {};
   const whatsapp = settings.whatsapp;
   const orderNumber = splitNumbers(whatsapp)[0];
   const testimonials = (testimonialsData.testimonials || []).slice(0, 3);
+  const heroSlides = buildAdSlides(carouselData.posts);
 
-  // The hero carousel and the category-showcase cover photos are page
-  // furniture that should always reflect the FULL catalog, not just the
-  // active filter — reuse `items` directly when the view is already
-  // unfiltered (the common case, and avoids a redundant second request),
-  // and only fetch the unfiltered set separately when a category/video
-  // filter is active and `items` is just that narrower slice.
+  // The category-showcase cover photos are page furniture that should
+  // always reflect the FULL catalog, not just the active filter — reuse
+  // `items` directly when the view is already unfiltered (the common case,
+  // and avoids a redundant second request), and only fetch the unfiltered
+  // set separately when a category/video filter is active and `items` is
+  // just that narrower slice.
   const showcaseItems = !category && !videoOnly ? items || [] : (await safeFetch('/api/gallery', { items: [] })).items || [];
 
   // The "Featured" strip only makes sense on the unfiltered view (it's a
   // curated cross-section of every category) — it hides itself below when
   // a filter is active.
   const featured = !category && !videoOnly ? showcaseItems.filter((i) => i.isFeatured).slice(0, 4) : [];
-  const heroSlides = buildHeroSlides(showcaseItems);
   const coverByCategory = buildCategoryCovers(showcaseItems);
 
   return (
     <div>
-      {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-b from-ink to-[#241c10] text-cream">
-        <div className="container-page py-24 md:py-32 grid md:grid-cols-2 gap-12 items-center">
-          <div>
+      {/* Hero — a big, full-bleed advertisement carousel (Eric: "Carousels
+          should be very big to be used for advertisement") with the site's
+          static headline/CTA overlaid on top of it, rather than sitting
+          beside a small product card. */}
+      <section className="relative overflow-hidden text-cream min-h-[780px] sm:min-h-[720px]">
+        <HeroCarousel slides={heroSlides} fallbackSrc="/images/rolen-logo.png" />
+        <div className="relative z-10 container-page pt-14 md:pt-24 w-full">
+          <div className="max-w-md">
             <Reveal as="p" className="uppercase tracking-[0.2em] text-xs text-gold-light mb-4">
               Rolen Studio &middot; {settings.city || 'Accra'}, {settings.country || 'Ghana'}
             </Reveal>
-            <Reveal as="h1" delay={0.08} className="font-display text-4xl md:text-5xl leading-tight mb-6">
+            <Reveal as="h1" delay={0.08} className="font-display text-4xl md:text-5xl leading-tight mb-6 drop-shadow-lg">
               Wear the story <span className="gold-gradient-text">we craft</span>.
             </Reveal>
-            <Reveal as="p" delay={0.16} className="text-cream/75 mb-8 max-w-md">
+            <Reveal as="p" delay={0.16} className="text-cream/85 mb-8 max-w-md drop-shadow">
               Kente ceremonial wear, bridal gowns, custom couture and our signature ready-to-wear lines —
               every piece designed and made in our own studio, by the same house that trains Ghana&apos;s
               next fashion designers.
@@ -188,7 +167,6 @@ export default async function ShopPage({ searchParams }) {
               )}
             </Reveal>
           </div>
-          <HeroCarousel slides={heroSlides} fallbackSrc="/images/rolen-logo.png" fallbackAlt="Rolen" />
         </div>
       </section>
 

@@ -13,7 +13,7 @@ const categories = ['Rolen Kente', 'Rolen Bridals', 'Rolen Custom', 'Rolen Ready
 export default function AdminGalleryPage() {
   const [items, setItems] = useState([]);
   const [form, setForm] = useState({ title: '', description: '', category: 'Other', price: '', isFeatured: false });
-  const [imageFile, setImageFile] = useState(null);
+  const [imageFiles, setImageFiles] = useState([]);
   const [videoFile, setVideoFile] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -25,19 +25,34 @@ export default function AdminGalleryPage() {
   // eslint-disable-next-line react-hooks/set-state-in-effect -- initial data load on mount
   useEffect(() => { load(); }, []);
 
+  function handlePhotosChosen(fileList) {
+    const files = Array.from(fileList);
+    if (files.length > 5) {
+      setError('Choose at most 5 photos.');
+      setImageFiles(files.slice(0, 5));
+      return;
+    }
+    setError(null);
+    setImageFiles(files);
+  }
+
+  function removePhoto(index) {
+    setImageFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
   async function handleUpload(e) {
     e.preventDefault();
-    if (!imageFile) return setError('Please choose a product photo — it’s required.');
+    if (!imageFiles.length) return setError('Please choose at least one product photo — it’s required.');
     setLoading(true);
     setError(null);
     try {
       const fd = new FormData();
-      fd.append('image', imageFile);
+      imageFiles.forEach((f) => fd.append('images', f));
       if (videoFile) fd.append('video', videoFile);
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
       await apiFetch('/api/gallery', { method: 'POST', body: fd });
       setForm({ title: '', description: '', category: 'Other', price: '', isFeatured: false });
-      setImageFile(null);
+      setImageFiles([]);
       setVideoFile(null);
       e.target.reset();
       await load();
@@ -66,8 +81,9 @@ export default function AdminGalleryPage() {
       <form onSubmit={handleUpload} className="card p-6 mb-8 space-y-4">
         <h2 className="font-display text-lg">Post a Product</h2>
         <p className="text-sm text-muted -mt-2">
-          Every product needs a photo. Add a video too if you want to show it in motion — both will appear
-          together on the product&apos;s page.
+          Every product needs at least one photo — add up to 5 so shoppers can browse the piece from every
+          angle. Add a video too if you want to show it in motion — all of it will appear together on the
+          product&apos;s page.
         </p>
         {error && <div className="rounded-lg bg-red-50 text-red-700 text-sm p-3">{error}</div>}
         <div className="grid md:grid-cols-2 gap-4">
@@ -97,9 +113,26 @@ export default function AdminGalleryPage() {
         <div className="grid sm:grid-cols-2 gap-4">
           <label className="text-sm block">
             <span className="block mb-1 font-medium">
-              Product Photo <span className="text-gold-dark">*</span>
+              Product Photos (1–5) <span className="text-gold-dark">*</span>
             </span>
-            <input type="file" required accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} className="w-full text-sm" />
+            <input
+              type="file"
+              required={imageFiles.length === 0}
+              multiple
+              accept="image/*"
+              onChange={(e) => handlePhotosChosen(e.target.files)}
+              className="w-full text-sm"
+            />
+            {imageFiles.length > 0 && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {imageFiles.map((f, i) => (
+                  <span key={`${f.name}-${i}`} className="inline-flex items-center gap-1.5 text-xs bg-black/5 rounded-full pl-2.5 pr-1 py-1">
+                    {f.name.length > 18 ? `${f.name.slice(0, 15)}…` : f.name}
+                    <button type="button" onClick={() => removePhoto(i)} className="w-4 h-4 rounded-full bg-black/10 hover:bg-black/20 text-[10px] leading-4">×</button>
+                  </span>
+                ))}
+              </div>
+            )}
           </label>
           <label className="text-sm block">
             <span className="block mb-1 font-medium">Product Video (optional)</span>
@@ -117,6 +150,9 @@ export default function AdminGalleryPage() {
               <img src={mediaUrl(item.imageUrl)} alt={item.title} className="w-full h-full object-cover" />
               {item.videoUrl && (
                 <span className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">▶ Video</span>
+              )}
+              {item.imageUrls?.length > 1 && (
+                <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">{item.imageUrls.length} photos</span>
               )}
             </div>
             <div className="p-3">
