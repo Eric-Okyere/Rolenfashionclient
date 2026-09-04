@@ -103,7 +103,20 @@ export default function AdminSettingsPage() {
             <Field label="City" value={form.city} onChange={(v) => update('city', v)} />
             <Field label="Country" value={form.country} onChange={(v) => update('country', v)} />
           </div>
-          <Field label="Google Maps Embed URL" value={form.mapEmbedUrl} onChange={(v) => update('mapEmbedUrl', v)} placeholder="https://www.google.com/maps/embed?..." />
+          <label className="text-sm block">
+            <span className="block mb-1 font-medium">Campus Map</span>
+            <input
+              value={form.mapEmbedUrl || ''}
+              placeholder="Paste a Google Maps link (Share button in the app works fine) or just type the address"
+              onChange={(e) => update('mapEmbedUrl', e.target.value)}
+              className="w-full rounded-lg border border-black/15 p-2.5"
+            />
+            <span className="block mt-1 text-xs text-muted">
+              Any Google Maps link works here — including a share link copied from the Maps app — or you can
+              just type the campus address. It&apos;s converted into a working embedded map automatically when
+              you save.
+            </span>
+          </label>
         </section>
 
         <section className="card p-6 space-y-4">
