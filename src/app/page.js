@@ -140,9 +140,13 @@ export default async function ShopPage({ searchParams }) {
           reference site's banner and said "look at how this is appearing
           well... don't show any writings on the carousel" — so the site's
           headline/CTA now sit in their own band directly below the media,
-          instead of layered on top of it. */}
+          instead of layered on top of it. Sized tall — Eric: "Increase the
+          height of the carousel. Let the whole picture show instead of
+          half" — a short box was squeezing a tall or wide photo down small
+          inside MediaCover's letterboxing; a much taller box lets the same
+          uncropped photo/video render at a real, full size. */}
       <section className="bg-ink text-cream">
-        <div className="relative overflow-hidden h-[380px] sm:h-[500px] md:h-[600px] lg:h-[680px]">
+        <div className="relative overflow-hidden h-[520px] sm:h-[70vh] md:h-[80vh] lg:h-[85vh] sm:min-h-[600px] lg:max-h-[920px]">
           <HeroCarousel slides={heroSlides} fallbackSrc="/images/rolen-logo.png" />
         </div>
         <div className="container-page py-12 md:py-16">
