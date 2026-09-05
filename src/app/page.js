@@ -145,12 +145,15 @@ export default async function ShopPage({ searchParams }) {
           to 3 cards side by side (1 on phones, 2 on tablets) instead of one
           full-bleed slide, so the box height below was brought down from
           the previous single-slide sizing (which ran up to 920px tall) to
-          something proportioned for 3 cards in a row — the old height would
-          have made each of the 3 photos a very tall, narrow sliver. Still
-          generous and full-width; MediaCover still guarantees every photo
-          renders fully uncropped inside its card either way. */}
+          something proportioned for 3 cards in a row. Eric then asked to
+          "increase the height of the carousel on a bigger screen" — mobile/
+          tablet sizing is unchanged, but `lg`/`xl`/`2xl` now each step up
+          further so the cards genuinely grow with screen size instead of
+          plateauing at 520px on any wide desktop or large monitor. Still
+          full-width; MediaCover guarantees every photo renders fully
+          uncropped inside its card at any of these heights. */}
       <section className="bg-ink text-cream">
-        <div className="relative overflow-hidden h-[420px] sm:h-[440px] md:h-[480px] lg:h-[520px]">
+        <div className="relative overflow-hidden h-[420px] sm:h-[440px] md:h-[480px] lg:h-[600px] xl:h-[680px] 2xl:h-[760px]">
           <HeroCarousel slides={heroSlides} fallbackSrc="/images/rolen-logo.png" />
         </div>
         <div className="container-page py-12 md:py-16">
