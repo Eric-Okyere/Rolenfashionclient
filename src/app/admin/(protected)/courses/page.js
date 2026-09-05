@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { apiFetch, API_URL, mediaUrl } from '@/lib/api';
+import MediaCover from '@/components/MediaCover';
 
 const emptyCourse = {
   title: '', category: 'Fashion Design', summary: '', description: '', duration: '', level: 'All Levels',
@@ -138,8 +139,8 @@ export default function AdminCoursesPage() {
         {courses.map((c) => (
           <div key={c._id} className="card p-5 flex gap-4">
             {c.image && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={mediaUrl(c.image)} alt={c.title} className="w-20 h-20 object-cover rounded-lg shrink-0" />
+              // Matches the public course card — full uncropped photo.
+              <MediaCover src={mediaUrl(c.image)} alt={c.title} className="w-20 h-20 rounded-lg shrink-0" />
             )}
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">

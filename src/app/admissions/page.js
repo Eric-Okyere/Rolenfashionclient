@@ -1,13 +1,19 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { safeFetch } from '@/lib/api';
+import { splitNumbers, telHref } from '@/lib/phone';
 import AdmissionsForm from '@/components/AdmissionsForm';
 import Reveal from '@/components/motion/Reveal';
+import PhoneIcon from '@/components/icons/PhoneIcon';
 
 export const metadata = { title: 'Admissions' };
 
 export default async function AdmissionsPage() {
-  const { courses } = await safeFetch('/api/courses', { courses: [] });
+  const [{ courses }, { settings }] = await Promise.all([
+    safeFetch('/api/courses', { courses: [] }),
+    safeFetch('/api/settings', { settings: {} }),
+  ]);
+  const phoneNumbers = splitNumbers(settings?.phone);
 
   return (
     <div className="container-page py-16">
@@ -24,6 +30,27 @@ export default async function AdmissionsPage() {
             Track My Application Status
           </Link>
         </div>
+        {/* Eric: "add the school second number to the form" — the apply form
+            itself had no phone number at all before this, on a page where a
+            prospective student is most likely to want to call with a
+            question. Shows every number in Settings.phone (both of Eric's
+            numbers, same source and same tel: links as the Contact page's
+            "Call" section), not just one. */}
+        {phoneNumbers.length > 0 && (
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-sm text-ink/60">
+            <span>Need help applying? Call</span>
+            {phoneNumbers.map((num) => (
+              <a
+                key={num}
+                href={telHref(num)}
+                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-black/15 text-ink/70 hover:border-gold-dark hover:text-gold-dark transition-colors"
+              >
+                <PhoneIcon className="w-3.5 h-3.5" />
+                {num}
+              </a>
+            ))}
+          </div>
+        )}
       </Reveal>
       {courses?.length > 0 && (
         <Reveal delay={0.05} className="max-w-3xl mx-auto mb-12">

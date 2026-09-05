@@ -5,6 +5,7 @@ import { isRecent } from '@/lib/time';
 import GalleryItem from '@/components/GalleryItem';
 import TestimonialCard from '@/components/TestimonialCard';
 import HeroCarousel from '@/components/HeroCarousel';
+import MediaCover from '@/components/MediaCover';
 import Reveal from '@/components/motion/Reveal';
 import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
@@ -262,11 +263,13 @@ export default async function ShopPage({ searchParams }) {
                 >
                   <div className="relative aspect-[4/3] overflow-hidden bg-gold-light/10">
                     {cover ? (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img
+                      // Eric: "show the full picture in the cards" — full
+                      // uncropped photo via MediaCover instead of a plain
+                      // object-cover fill.
+                      <MediaCover
                         src={mediaUrl(cover.imageUrl)}
                         alt={cat.key}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full group-hover:scale-105 transition-transform duration-300"
                       />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center">

@@ -5,6 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { mediaUrl } from '@/lib/api';
 import { splitNumbers, waHref } from '@/lib/phone';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
+import MediaCover from '@/components/MediaCover';
 
 // `whatsapp` (Settings.whatsapp) is optional — pages that just want a plain
 // photo/video card (e.g. the School page's small preview strip) can omit it
@@ -50,11 +51,17 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
         onClick={openLightbox}
         className="card overflow-hidden group relative aspect-square block w-full text-left transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl motion-reduce:hover:translate-y-0"
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
+        {/* Eric: "work on all the cards and show the full picture in the
+            cards" — a plain object-cover fill was cropping tall/portrait
+            product photos to fit this square card, the same issue already
+            fixed for the carousel. MediaCover shows the whole photo
+            uncropped, with a blurred fill behind it so the square never has
+            plain empty bars. The hover zoom now scales the whole card
+            (photo + backdrop together) instead of just an inner <img>. */}
+        <MediaCover
           src={mediaUrl(item.imageUrl)}
           alt={item.title}
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          className="w-full h-full group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
           <p className="text-white text-sm font-medium">{item.title}</p>

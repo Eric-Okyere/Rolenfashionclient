@@ -185,8 +185,9 @@ export default function AdminGalleryPage() {
         {items.map((item) => (
           <div key={item._id} className="card overflow-hidden">
             <div className="aspect-square bg-black/5 relative">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={mediaUrl(item.imageUrl)} alt={item.title} className="w-full h-full object-cover" />
+              {/* Matches the public product card — full uncropped photo,
+                  not a cropped object-cover fill. */}
+              <MediaCover src={mediaUrl(item.imageUrl)} alt={item.title} className="w-full h-full" />
               {item.videoUrl && (
                 <span className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">▶ Video</span>
               )}
