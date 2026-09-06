@@ -1,10 +1,11 @@
 import { Suspense } from 'react';
 import Link from 'next/link';
 import { safeFetch } from '@/lib/api';
-import { splitNumbers, telHref } from '@/lib/phone';
+import { splitNumbers, telHref, waHref } from '@/lib/phone';
 import AdmissionsForm from '@/components/AdmissionsForm';
 import Reveal from '@/components/motion/Reveal';
 import PhoneIcon from '@/components/icons/PhoneIcon';
+import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 
 export const metadata = { title: 'Admissions' };
 
@@ -13,7 +14,13 @@ export default async function AdmissionsPage() {
     safeFetch('/api/courses', { courses: [] }),
     safeFetch('/api/settings', { settings: {} }),
   ]);
+  // Eric: "one of the contacts is whatsapp contact... separate them" —
+  // Settings.phone and Settings.whatsapp are genuinely different numbers
+  // (024 344 2262 is WhatsApp-only), same split already used on the
+  // Contact page, so each renders under its own label with its own link
+  // type (tel: vs. wa.me) below instead of both being lumped under "Call".
   const phoneNumbers = splitNumbers(settings?.phone);
+  const whatsappNumbers = splitNumbers(settings?.whatsapp);
 
   return (
     <div className="container-page py-16">
@@ -32,23 +39,46 @@ export default async function AdmissionsPage() {
         </div>
         {/* Eric: "add the school second number to the form" — the apply form
             itself had no phone number at all before this, on a page where a
-            prospective student is most likely to want to call with a
-            question. Shows every number in Settings.phone (both of Eric's
-            numbers, same source and same tel: links as the Contact page's
-            "Call" section), not just one. */}
-        {phoneNumbers.length > 0 && (
-          <div className="flex flex-wrap items-center justify-center gap-2 mt-4 text-sm text-ink/60">
-            <span>Need help applying? Call</span>
-            {phoneNumbers.map((num) => (
-              <a
-                key={num}
-                href={telHref(num)}
-                className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-black/15 text-ink/70 hover:border-gold-dark hover:text-gold-dark transition-colors"
-              >
-                <PhoneIcon className="w-3.5 h-3.5" />
-                {num}
-              </a>
-            ))}
+            prospective student is most likely to want to reach out with a
+            question. Phone and WhatsApp are shown as separate, clearly
+            labeled groups (same tel:/wa.me split as the Contact page) since
+            they're genuinely different numbers, not two ways to reach the
+            same line. */}
+        {(phoneNumbers.length > 0 || whatsappNumbers.length > 0) && (
+          <div className="flex flex-wrap items-center justify-center gap-x-5 gap-y-2 mt-4 text-sm text-ink/60">
+            <span>Need help applying?</span>
+            {phoneNumbers.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs uppercase tracking-wide text-muted">Call</span>
+                {phoneNumbers.map((num) => (
+                  <a
+                    key={num}
+                    href={telHref(num)}
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-black/15 text-ink/70 hover:border-gold-dark hover:text-gold-dark transition-colors"
+                  >
+                    <PhoneIcon className="w-3.5 h-3.5" />
+                    {num}
+                  </a>
+                ))}
+              </div>
+            )}
+            {whatsappNumbers.length > 0 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs uppercase tracking-wide text-muted">WhatsApp</span>
+                {whatsappNumbers.map((num) => (
+                  <a
+                    key={num}
+                    href={waHref(num)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full border border-black/15 text-ink/70 hover:border-[#25D366] hover:text-[#128C4A] transition-colors"
+                  >
+                    <WhatsAppIcon className="w-3.5 h-3.5" />
+                    {num}
+                  </a>
+                ))}
+              </div>
+            )}
           </div>
         )}
       </Reveal>
