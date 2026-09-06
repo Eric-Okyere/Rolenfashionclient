@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { mediaUrl } from '@/lib/api';
+import { mediaUrl, API_URL } from '@/lib/api';
 import { splitNumbers, waHref } from '@/lib/phone';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import MediaCover from '@/components/MediaCover';
@@ -43,6 +43,17 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
 
   function prevPhoto() {
     setPhotoIndex((i) => (i - 1 + photos.length) % photos.length);
+  }
+
+  // Eric: "If a customer wants to buy a product, let admin receives whatsapp
+  // notifications" — fired the instant the shopper taps the button below,
+  // alongside (not instead of) that same tap opening their own WhatsApp
+  // chat to the school. Deliberately not awaited and errors are swallowed:
+  // this must never delay or break the shopper opening WhatsApp, it just
+  // additionally lets Eric know via a WhatsApp alert (see server's
+  // utils/whatsapp.js) without having to watch the chat itself.
+  function pingOrderInterest() {
+    fetch(`${API_URL}/api/gallery/${item._id}/order-click`, { method: 'POST' }).catch(() => {});
   }
 
   return (
@@ -183,7 +194,7 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
                       href={waHref(orderNumber, orderMessage)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
+                      onClick={(e) => { e.stopPropagation(); pingOrderInterest(); }}
                       className="inline-flex items-center gap-1.5 bg-[#25D366] text-white text-xs font-semibold px-3.5 py-2 rounded-full hover:brightness-105 transition-[filter] whitespace-nowrap"
                     >
                       <WhatsAppIcon className="w-3.5 h-3.5" />
