@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { safeFetch, mediaUrl } from '@/lib/api';
 import { splitNumbers, waHref } from '@/lib/phone';
 import { isRecent } from '@/lib/time';
@@ -158,30 +159,44 @@ export default async function ShopPage({ searchParams }) {
           <HeroCarousel slides={heroSlides} fallbackSrc="/images/rolen-logo.png" />
         </div>
         <div className="container-page py-12 md:py-16">
-          <div className="max-w-md">
-            <Reveal as="p" className="uppercase tracking-[0.2em] text-xs text-gold-light mb-4">
-              Rolen Studio &middot; {settings.city || 'Accra'}, {settings.country || 'Ghana'}
-            </Reveal>
-            <Reveal as="h1" delay={0.08} className="font-display text-4xl md:text-5xl leading-tight mb-6">
-              Wear the story <span className="gold-gradient-text">we craft</span>.
-            </Reveal>
-            <Reveal as="p" delay={0.16} className="text-cream/85 mb-8 max-w-md">
-              Kente ceremonial wear, bridal gowns, custom couture and our signature ready-to-wear lines —
-              every piece designed and made in our own studio, by the same house that trains Ghana&apos;s
-              next fashion designers.
-            </Reveal>
-            <Reveal delay={0.24} className="flex flex-wrap gap-4">
-              <a href="#collection" className="btn-gold">Shop the Collection</a>
-              {orderNumber && (
-                <a
-                  href={waHref(orderNumber, "Hi Rolen! I'd like to ask about a custom order.")}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="btn-outline !border-cream/40 !text-cream hover:!bg-cream hover:!text-ink"
-                >
-                  Custom Orders
-                </a>
-              )}
+          {/* Eric: change the headline to the business slogan "Simply
+              Elegance" and show the logo at the right, in the empty space
+              this dark band always had beside the left-aligned text block. */}
+          <div className="flex items-center justify-between gap-10">
+            <div className="max-w-md">
+              <Reveal as="p" className="uppercase tracking-[0.2em] text-xs text-gold-light mb-4">
+                Rolen Studio &middot; {settings.city || 'Accra'}, {settings.country || 'Ghana'}
+              </Reveal>
+              <Reveal as="h1" delay={0.08} className="font-display text-4xl md:text-5xl leading-tight mb-6">
+                Simply <span className="gold-gradient-text">Elegance</span>.
+              </Reveal>
+              <Reveal as="p" delay={0.16} className="text-cream/85 mb-8 max-w-md">
+                Kente ceremonial wear, bridal gowns, custom couture and our signature ready-to-wear lines —
+                every piece designed and made in our own studio, by the same house that trains Ghana&apos;s
+                next fashion designers.
+              </Reveal>
+              <Reveal delay={0.24} className="flex flex-wrap gap-4">
+                <a href="#collection" className="btn-gold">Shop the Collection</a>
+                {orderNumber && (
+                  <a
+                    href={waHref(orderNumber, "Hi Rolen! I'd like to ask about a custom order.")}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn-outline !border-cream/40 !text-cream hover:!bg-cream hover:!text-ink"
+                  >
+                    Custom Orders
+                  </a>
+                )}
+              </Reveal>
+            </div>
+            <Reveal delay={0.1} className="hidden md:block shrink-0">
+              <Image
+                src="/images/rolen-logo.png"
+                alt="Rolen"
+                width={280}
+                height={280}
+                className="w-40 lg:w-52 xl:w-60 h-auto object-contain"
+              />
             </Reveal>
           </div>
         </div>
