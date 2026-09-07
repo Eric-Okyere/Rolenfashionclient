@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { mediaUrl, API_URL } from '@/lib/api';
 import { splitNumbers, waHref } from '@/lib/phone';
@@ -20,6 +20,16 @@ import MediaCover from '@/components/MediaCover';
 export default function GalleryItem({ item, whatsapp, isNew = false }) {
   const [open, setOpen] = useState(false);
   const [mediaIndex, setMediaIndex] = useState(0);
+  // Eric shared a second reference video: hovering a product photo magnifies
+  // the part of it under the cursor, so a shopper can inspect fabric/stitch
+  // detail without leaving the lightbox. `zoomOrigin` tracks where on the
+  // photo the cursor currently is (as a CSS `x% y%` transform-origin);
+  // `isZoomed` is only true while the cursor is actually over the photo, so
+  // it snaps back to normal the moment the mouse leaves. Photo-only, same as
+  // the reference — a playing video has its own controls to magnify with.
+  const [isZoomed, setIsZoomed] = useState(false);
+  const [zoomOrigin, setZoomOrigin] = useState('50% 50%');
+  const zoomBoxRef = useRef(null);
   const hasVideo = Boolean(item.videoUrl);
   // Older products saved before the 5-photo field existed just have an empty
   // imageUrls array — fall back to the single imageUrl so they still browse
@@ -52,6 +62,19 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
 
   function prevMedia() {
     setMediaIndex((i) => (i - 1 + mediaItems.length) % mediaItems.length);
+  }
+
+  // Position the magnified view under the cursor. Measured against the
+  // photo's own box (`zoomBoxRef`, sized to exactly wrap the <img> — see
+  // below), not the wider media area around it, so the percentage lines up
+  // with where the cursor actually is on the photo itself.
+  function handleZoomMove(e) {
+    const box = zoomBoxRef.current;
+    if (!box) return;
+    const rect = box.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 100;
+    const y = ((e.clientY - rect.top) / rect.height) * 100;
+    setZoomOrigin(`${Math.min(100, Math.max(0, x))}% ${Math.min(100, Math.max(0, y))}%`);
   }
 
   // Eric: "If a customer wants to buy a product, let admin receives whatsapp
@@ -127,12 +150,23 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
                     className="w-full max-h-[70vh] rounded-lg bg-black"
                   />
                 ) : (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={mediaUrl(currentMedia.src)}
-                    alt={`${item.title}${hasMultipleMedia ? ` — ${mediaIndex + 1} of ${mediaItems.length}` : ''}`}
-                    className="w-full max-h-[70vh] object-contain rounded-lg"
-                  />
+                  <div
+                    ref={zoomBoxRef}
+                    className="overflow-hidden rounded-lg"
+                    onMouseEnter={() => setIsZoomed(true)}
+                    onMouseMove={handleZoomMove}
+                    onMouseLeave={() => setIsZoomed(false)}
+                  >
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={mediaUrl(currentMedia.src)}
+                      alt={`${item.title}${hasMultipleMedia ? ` — ${mediaIndex + 1} of ${mediaItems.length}` : ''}`}
+                      style={isZoomed ? { transformOrigin: zoomOrigin } : undefined}
+                      className={`w-full max-h-[70vh] object-contain rounded-lg transition-transform duration-150 ease-out ${
+                        isZoomed ? 'scale-[2.2] cursor-zoom-out' : 'cursor-zoom-in'
+                      }`}
+                    />
+                  </div>
                 )}
                 {hasMultipleMedia && (
                   <>
