@@ -75,6 +75,14 @@ export default function ApplicationDetailPage() {
           <Row label="Fee" value={application.course?.fee ? `${application.course.feeCurrency} ${application.course.fee}` : 'Contact us for pricing'} />
           <Row label="Intake" value={application.intakePeriod} />
           <Row label="Prior Education" value={application.priorEducation} />
+          <Row
+            label="Fee Deposit (MoMo)"
+            value={
+              application.feePaymentStatus === 'paid'
+                ? `Paid — GHS ${Number(application.feeAmountPaid || 0).toLocaleString()} (${application.feePaymentReference || 'ref n/a'})`
+                : 'Not yet paid'
+            }
+          />
         </div>
       </div>
 

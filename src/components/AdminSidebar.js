@@ -11,6 +11,7 @@ const links = [
   { href: '/admin/courses', label: 'Courses', icon: '🎓' },
   { href: '/admin/gallery', label: 'Gallery & Shop', icon: '🖼️' },
   { href: '/admin/carousel', label: 'Ad Carousel', icon: '🎬' },
+  { href: '/admin/payments', label: 'Payments', icon: '💳' },
   { href: '/admin/testimonials', label: 'Testimonials', icon: '💬' },
   { href: '/admin/messages', label: 'Messages', icon: '✉️' },
   { href: '/admin/newsletter', label: 'Newsletter', icon: '📧' },

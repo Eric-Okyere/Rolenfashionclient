@@ -20,6 +20,13 @@ export default function StatusChecker() {
   const [loading, setLoading] = useState(false);
   const [application, setApplication] = useState(null);
   const [error, setError] = useState(null);
+  // Eric: "Students must pay their fees through Momo on 0209317581", then
+  // asked for students to enter their phone number and have the money
+  // deducted directly — built via Paystack's Mobile Money checkout (see
+  // server's paymentController.js). `payLoading`/`payError` are local to
+  // this button so a payment hiccup never disturbs the status lookup above.
+  const [payLoading, setPayLoading] = useState(false);
+  const [payError, setPayError] = useState(null);
 
   async function check(e) {
     e.preventDefault();
@@ -35,6 +42,36 @@ export default function StatusChecker() {
       setError(err.message);
     } finally {
       setLoading(false);
+    }
+  }
+
+  // The deposit amount comes from the admitted course's own depositAmount
+  // (falls back to the full fee if a deposit amount was never set — see
+  // Course.depositAmount's comment). Deliberately requires `application`'s
+  // course to actually carry an amount before showing the button at all —
+  // nothing worse than a "Pay" button that then fails because no price was
+  // ever configured for it.
+  const depositAmount = application?.course?.depositAmount || application?.course?.fee;
+  const canPayDeposit =
+    application?.status === 'admitted' && application?.feePaymentStatus !== 'paid' && !!depositAmount;
+
+  async function payDeposit() {
+    setPayLoading(true);
+    setPayError(null);
+    try {
+      const data = await apiFetch('/api/payments/initialize', {
+        method: 'POST',
+        body: JSON.stringify({
+          type: 'admission_fee',
+          applicationId: application._id,
+          email,
+          name: `${application.firstName} ${application.lastName}`,
+        }),
+      });
+      window.location.href = data.authorizationUrl;
+    } catch (err) {
+      setPayError(err.message);
+      setPayLoading(false);
     }
   }
 
@@ -95,6 +132,28 @@ export default function StatusChecker() {
                 </a>
                 <p className="text-xs text-muted mt-2">Opens as a PDF — open it and use your browser or PDF viewer&apos;s Print option.</p>
               </>
+            )}
+
+            {application.status === 'admitted' && application.feePaymentStatus === 'paid' && (
+              <p className="mt-4 text-sm text-green-700 bg-green-50 border border-green-200 rounded-lg p-3">
+                ✅ Fee deposit received — see your admission letter for the remaining balance and schedule.
+              </p>
+            )}
+
+            {canPayDeposit && (
+              <div className="mt-4 pt-4 border-t border-black/10">
+                <p className="text-sm text-ink/80 mb-1">
+                  Fee deposit due: <span className="font-semibold">GHS {Number(depositAmount).toLocaleString()}</span>
+                </p>
+                <p className="text-xs text-muted mb-3">
+                  Pay securely by Mobile Money — you&apos;ll enter your MoMo number and approve the payment on your
+                  own phone.
+                </p>
+                {payError && <p className="text-xs text-red-600 mb-2">{payError}</p>}
+                <button type="button" onClick={payDeposit} disabled={payLoading} className="btn-gold w-full">
+                  {payLoading ? 'Starting payment…' : 'Pay Deposit via MoMo'}
+                </button>
+              </div>
             )}
           </motion.div>
         )}

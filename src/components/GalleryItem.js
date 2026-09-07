@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { mediaUrl, API_URL } from '@/lib/api';
+import { mediaUrl, API_URL, apiFetch } from '@/lib/api';
 import { splitNumbers, waHref } from '@/lib/phone';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 import MediaCover from '@/components/MediaCover';
@@ -50,6 +50,37 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
   const currentMedia = mediaItems[mediaIndex];
   const orderNumber = splitNumbers(whatsapp)[0];
   const orderMessage = `Hi Rolen! I'd like to order: ${item.title}${item.price ? ` (GHS ${Number(item.price).toLocaleString()})` : ''}.`;
+
+  // Eric: "Students must pay their fees through Momo on 0209317581", then
+  // asked for a way to enter a phone number and have the money deducted
+  // directly — extended here to shop orders too, alongside (not instead of)
+  // "Order via WhatsApp", since a price is already published on some
+  // products. Built via Paystack's Mobile Money checkout (see the server's
+  // paymentController.js) — this component only ever collects a name/email
+  // to start the checkout; the actual MoMo phone number and PIN approval
+  // happen on Paystack's own secure page, never here.
+  const [showPayForm, setShowPayForm] = useState(false);
+  const [payName, setPayName] = useState('');
+  const [payEmail, setPayEmail] = useState('');
+  const [payLoading, setPayLoading] = useState(false);
+  const [payError, setPayError] = useState(null);
+
+  async function payWithMomo(e) {
+    e.preventDefault();
+    e.stopPropagation();
+    setPayLoading(true);
+    setPayError(null);
+    try {
+      const data = await apiFetch('/api/payments/initialize', {
+        method: 'POST',
+        body: JSON.stringify({ type: 'shop_order', galleryItemId: item._id, email: payEmail, name: payName }),
+      });
+      window.location.href = data.authorizationUrl;
+    } catch (err) {
+      setPayError(err.message);
+      setPayLoading(false);
+    }
+  }
 
   function openLightbox() {
     setMediaIndex(0);
@@ -233,6 +264,18 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
                 </div>
                 <div className="flex items-center gap-3">
                   {item.price && <p className="text-gold-light font-semibold whitespace-nowrap">GHS {Number(item.price).toLocaleString()}</p>}
+                  {/* Only offered when the product has a published price —
+                      there's nothing to charge otherwise, so this button
+                      never appears next to a "contact for pricing" item. */}
+                  {item.price && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setShowPayForm((v) => !v); }}
+                      className="inline-flex items-center gap-1.5 bg-gold text-ink text-xs font-semibold px-3.5 py-2 rounded-full hover:brightness-105 transition-[filter] whitespace-nowrap"
+                    >
+                      💳 Pay with MoMo
+                    </button>
+                  )}
                   {orderNumber && (
                     <a
                       href={waHref(orderNumber, orderMessage)}
@@ -247,6 +290,41 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
                   )}
                 </div>
               </div>
+
+              {showPayForm && item.price && (
+                <form
+                  onSubmit={payWithMomo}
+                  onClick={(e) => e.stopPropagation()}
+                  className="mt-3 bg-cream/5 border border-cream/15 rounded-lg p-4 space-y-3"
+                >
+                  <p className="text-cream text-sm font-medium">
+                    Pay GHS {Number(item.price).toLocaleString()} for {item.title}
+                  </p>
+                  <p className="text-cream/60 text-xs">
+                    You&apos;ll enter your Mobile Money number and approve the payment on your own phone next.
+                  </p>
+                  <input
+                    required
+                    placeholder="Your name"
+                    value={payName}
+                    onChange={(e) => setPayName(e.target.value)}
+                    className="w-full rounded-lg border border-cream/20 bg-transparent text-cream placeholder:text-cream/40 p-2.5 text-sm outline-none focus:border-gold-light"
+                  />
+                  <input
+                    required
+                    type="email"
+                    placeholder="Your email (for a receipt)"
+                    value={payEmail}
+                    onChange={(e) => setPayEmail(e.target.value)}
+                    className="w-full rounded-lg border border-cream/20 bg-transparent text-cream placeholder:text-cream/40 p-2.5 text-sm outline-none focus:border-gold-light"
+                  />
+                  {payError && <p className="text-red-400 text-xs">{payError}</p>}
+                  <button type="submit" disabled={payLoading} className="btn-gold w-full">
+                    {payLoading ? 'Starting payment…' : 'Continue to Payment'}
+                  </button>
+                </form>
+              )}
+
               <button onClick={() => setOpen(false)} className="mt-3 text-cream/70 text-sm underline">
                 Close
               </button>

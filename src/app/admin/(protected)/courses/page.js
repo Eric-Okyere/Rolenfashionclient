@@ -6,7 +6,7 @@ import MediaCover from '@/components/MediaCover';
 
 const emptyCourse = {
   title: '', category: 'Fashion Design', summary: '', description: '', duration: '', level: 'All Levels',
-  fee: '', feeCurrency: 'GHS', intakePeriods: '', curriculum: '', isPublished: true,
+  fee: '', feeCurrency: 'GHS', depositAmount: '', intakePeriods: '', curriculum: '', isPublished: true,
 };
 
 export default function AdminCoursesPage() {
@@ -48,6 +48,7 @@ export default function AdminCoursesPage() {
       const payload = {
         ...form,
         fee: form.fee === '' || form.fee === null || form.fee === undefined ? null : Number(form.fee),
+        depositAmount: form.depositAmount === '' || form.depositAmount === null || form.depositAmount === undefined ? null : Number(form.depositAmount),
         intakePeriods: form.intakePeriods.split(',').map((s) => s.trim()).filter(Boolean),
         curriculum: form.curriculum.split('\n').map((s) => s.trim()).filter(Boolean),
       };
@@ -106,6 +107,13 @@ export default function AdminCoursesPage() {
             />
             <Field label="Fee (optional — leave blank for &quot;Contact us&quot;)" type="number" value={form.fee} onChange={(v) => setForm({ ...form, fee: v })} />
             <Field label="Currency" value={form.feeCurrency} onChange={(v) => setForm({ ...form, feeCurrency: v })} />
+            <Field
+              label="MoMo Deposit Amount (optional — leave blank to charge the full fee)"
+              type="number"
+              value={form.depositAmount}
+              onChange={(v) => setForm({ ...form, depositAmount: v })}
+              className="md:col-span-2"
+            />
             <Field label="Intake Periods (comma separated)" value={form.intakePeriods} onChange={(v) => setForm({ ...form, intakePeriods: v })} className="md:col-span-2" />
           </div>
           <label className="text-sm block">
