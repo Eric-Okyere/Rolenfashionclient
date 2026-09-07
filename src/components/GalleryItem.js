@@ -19,30 +19,39 @@ import MediaCover from '@/components/MediaCover';
 // unstable read by this project's lint rules.
 export default function GalleryItem({ item, whatsapp, isNew = false }) {
   const [open, setOpen] = useState(false);
-  const [activeMedia, setActiveMedia] = useState('image');
-  const [photoIndex, setPhotoIndex] = useState(0);
+  const [mediaIndex, setMediaIndex] = useState(0);
   const hasVideo = Boolean(item.videoUrl);
   // Older products saved before the 5-photo field existed just have an empty
   // imageUrls array — fall back to the single imageUrl so they still browse
   // correctly (as one photo, no strip/arrows), same "don't require a
   // migration" pattern used elsewhere in this project.
   const photos = item.imageUrls?.length ? item.imageUrls : [item.imageUrl];
-  const hasMultiplePhotos = photos.length > 1;
+  // Eric shared a reference site (a marketplace quick-view popup) and said
+  // "implement this function on the products cards": there, the video isn't
+  // behind a separate Photo/Video toggle — it's just the last thumbnail in
+  // one strip, and clicking any thumbnail (photo or video) swaps the main
+  // preview in place, with the same prev/next arrows working across all of
+  // them. `mediaItems` is that single combined list — photos first, video
+  // last, matching the reference — so one `mediaIndex` drives everything.
+  const mediaItems = hasVideo
+    ? [...photos.map((src) => ({ type: 'image', src })), { type: 'video', src: item.videoUrl }]
+    : photos.map((src) => ({ type: 'image', src }));
+  const hasMultipleMedia = mediaItems.length > 1;
+  const currentMedia = mediaItems[mediaIndex];
   const orderNumber = splitNumbers(whatsapp)[0];
   const orderMessage = `Hi Rolen! I'd like to order: ${item.title}${item.price ? ` (GHS ${Number(item.price).toLocaleString()})` : ''}.`;
 
   function openLightbox() {
-    setActiveMedia('image');
-    setPhotoIndex(0);
+    setMediaIndex(0);
     setOpen(true);
   }
 
-  function nextPhoto() {
-    setPhotoIndex((i) => (i + 1) % photos.length);
+  function nextMedia() {
+    setMediaIndex((i) => (i + 1) % mediaItems.length);
   }
 
-  function prevPhoto() {
-    setPhotoIndex((i) => (i - 1 + photos.length) % photos.length);
+  function prevMedia() {
+    setMediaIndex((i) => (i - 1 + mediaItems.length) % mediaItems.length);
   }
 
   // Eric: "If a customer wants to buy a product, let admin receives whatsapp
@@ -84,7 +93,7 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
         {isNew && (
           <span className="absolute top-2 left-2 bg-gold text-ink text-[10px] font-semibold px-2 py-0.5 rounded-full">NEW</span>
         )}
-        {hasMultiplePhotos && (
+        {photos.length > 1 && (
           <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">1/{photos.length}</span>
         )}
       </button>
@@ -107,76 +116,77 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
               className="max-w-3xl w-full"
               onClick={(e) => e.stopPropagation()}
             >
-              {hasVideo && (
-                <div className="flex gap-2 mb-3 justify-center">
-                  <button
-                    onClick={() => setActiveMedia('image')}
-                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                      activeMedia === 'image' ? 'bg-gold text-ink border-gold' : 'border-cream/30 text-cream/80'
-                    }`}
-                  >
-                    Photo
-                  </button>
-                  <button
-                    onClick={() => setActiveMedia('video')}
-                    className={`text-xs px-3 py-1.5 rounded-full border transition-colors ${
-                      activeMedia === 'video' ? 'bg-gold text-ink border-gold' : 'border-cream/30 text-cream/80'
-                    }`}
-                  >
-                    Video
-                  </button>
-                </div>
-              )}
-
-              {activeMedia === 'video' && hasVideo ? (
-                <video src={mediaUrl(item.videoUrl)} controls autoPlay className="w-full max-h-[70vh] rounded-lg" />
-              ) : (
-                <div className="relative">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
+              <div className="relative">
+                {currentMedia.type === 'video' ? (
+                  <video
+                    key={currentMedia.src}
+                    src={mediaUrl(currentMedia.src)}
+                    controls
+                    autoPlay
+                    playsInline
+                    className="w-full max-h-[70vh] rounded-lg bg-black"
+                  />
+                ) : (
+                  // eslint-disable-next-line @next/next/no-img-element
                   <img
-                    src={mediaUrl(photos[photoIndex])}
-                    alt={`${item.title}${hasMultiplePhotos ? ` — photo ${photoIndex + 1} of ${photos.length}` : ''}`}
+                    src={mediaUrl(currentMedia.src)}
+                    alt={`${item.title}${hasMultipleMedia ? ` — ${mediaIndex + 1} of ${mediaItems.length}` : ''}`}
                     className="w-full max-h-[70vh] object-contain rounded-lg"
                   />
-                  {hasMultiplePhotos && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); prevPhoto(); }}
-                        aria-label="Previous photo"
-                        className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
-                      >
-                        ‹
-                      </button>
-                      <button
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); nextPhoto(); }}
-                        aria-label="Next photo"
-                        className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
-                      >
-                        ›
-                      </button>
-                      <span className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full">
-                        {photoIndex + 1}/{photos.length}
-                      </span>
-                    </>
-                  )}
-                </div>
-              )}
-
-              {hasMultiplePhotos && activeMedia === 'image' && (
-                <div className="flex gap-2 mt-2 justify-center flex-wrap">
-                  {photos.map((p, i) => (
+                )}
+                {hasMultipleMedia && (
+                  <>
                     <button
-                      key={p}
                       type="button"
-                      onClick={(e) => { e.stopPropagation(); setPhotoIndex(i); }}
-                      className={`w-12 h-12 rounded-md overflow-hidden border-2 transition-colors ${
-                        i === photoIndex ? 'border-gold' : 'border-transparent opacity-70 hover:opacity-100'
+                      onClick={(e) => { e.stopPropagation(); prevMedia(); }}
+                      aria-label="Previous"
+                      className="absolute left-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                    >
+                      ‹
+                    </button>
+                    <button
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); nextMedia(); }}
+                      aria-label="Next"
+                      className="absolute right-2 top-1/2 -translate-y-1/2 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center hover:bg-black/70 transition-colors"
+                    >
+                      ›
+                    </button>
+                    <span className="absolute bottom-2 right-2 bg-black/60 text-white text-[10px] px-2 py-0.5 rounded-full">
+                      {mediaIndex + 1}/{mediaItems.length}
+                    </span>
+                  </>
+                )}
+              </div>
+
+              {/* Eric's reference site: one thumbnail strip covering photos AND
+                  the video together (video last), any thumbnail tap swapping
+                  the main preview above — not a separate Photo/Video toggle. */}
+              {hasMultipleMedia && (
+                <div className="flex gap-2 mt-2 justify-center flex-wrap">
+                  {mediaItems.map((m, i) => (
+                    <button
+                      key={`${m.type}-${m.src}`}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); setMediaIndex(i); }}
+                      aria-label={m.type === 'video' ? 'Play video' : `Photo ${i + 1}`}
+                      className={`relative w-12 h-12 rounded-md overflow-hidden border-2 transition-colors ${
+                        i === mediaIndex ? 'border-gold' : 'border-transparent opacity-70 hover:opacity-100'
                       }`}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img src={mediaUrl(p)} alt="" className="w-full h-full object-cover" />
+                      {m.type === 'video' ? (
+                        <>
+                          {/* Browsers commonly show the video's first frame here
+                              once metadata loads, but that's not guaranteed
+                              everywhere, so the ▶ badge on top is what actually
+                              makes it read as "this one's a video" reliably. */}
+                          <video src={mediaUrl(m.src)} muted preload="metadata" playsInline className="w-full h-full object-cover bg-ink" />
+                          <span className="absolute inset-0 flex items-center justify-center bg-black/30 text-white text-xs">▶</span>
+                        </>
+                      ) : (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img src={mediaUrl(m.src)} alt="" className="w-full h-full object-cover" />
+                      )}
                     </button>
                   ))}
                 </div>
