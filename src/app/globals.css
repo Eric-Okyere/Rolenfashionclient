@@ -107,6 +107,30 @@ body {
   box-shadow: 0 1px 3px rgba(23, 19, 16, 0.06);
 }
 
+/* Eric: "Add a cool animation to this" (the Shop homepage's "Simply
+   Elegance" hero) — a light sweeps across a button on hover. Scoped to its
+   own class (added alongside .btn-gold/.btn-outline on just the two hero
+   CTAs in app/page.js) rather than built into those shared classes, so
+   every other gold/outline button site-wide is untouched. */
+.hero-cta-shine {
+  position: relative;
+  overflow: hidden;
+}
+.hero-cta-shine::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -75%;
+  width: 45%;
+  height: 100%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  transform: skewX(-20deg);
+  transition: left 0.6s ease;
+}
+.hero-cta-shine:hover::after {
+  left: 130%;
+}
+
 ::selection {
   background: var(--gold-light);
   color: #1a1712;
@@ -121,6 +145,10 @@ body {
   }
   .gold-gradient-text {
     animation: none;
+  }
+  .hero-cta-shine::after {
+    transition: none;
+    display: none;
   }
 }
 

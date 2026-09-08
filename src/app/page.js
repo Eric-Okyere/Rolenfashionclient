@@ -1,5 +1,4 @@
 import Link from 'next/link';
-import Image from 'next/image';
 import { safeFetch, mediaUrl } from '@/lib/api';
 import { splitNumbers, waHref } from '@/lib/phone';
 import { isRecent } from '@/lib/time';
@@ -9,6 +8,8 @@ import HeroCarousel from '@/components/HeroCarousel';
 import MediaCover from '@/components/MediaCover';
 import Reveal from '@/components/motion/Reveal';
 import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
+import HeroVisual from '@/components/motion/HeroVisual';
+import HeroUnderline from '@/components/motion/HeroUnderline';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 
 // The Shop is now the site's homepage — Eric: "let the shop be the main
@@ -167,37 +168,51 @@ export default async function ShopPage({ searchParams }) {
               <Reveal as="p" className="uppercase tracking-[0.2em] text-xs text-gold-light mb-4">
                 Rolen Studio &middot; {settings.city || 'Accra'}, {settings.country || 'Ghana'}
               </Reveal>
-              <Reveal as="h1" delay={0.08} className="font-display text-4xl md:text-5xl leading-tight mb-6">
+              <Reveal as="h1" delay={0.08} className="font-display text-4xl md:text-5xl leading-tight mb-3">
                 Simply <span className="gold-gradient-text">Elegance</span>.
               </Reveal>
+              {/* Eric: "Add a cool animation to this" — a thin gold rule
+                  that draws itself in under the headline, once, right after
+                  it fades up (see HeroUnderline.js). */}
+              <HeroUnderline className="w-24 mb-6" />
               <Reveal as="p" delay={0.16} className="text-cream/85 mb-8 max-w-md">
                 Kente ceremonial wear, bridal gowns, custom couture and our signature ready-to-wear lines —
                 every piece designed and made in our own studio, by the same house that trains Ghana&apos;s
                 next fashion designers.
               </Reveal>
               <Reveal delay={0.24} className="flex flex-wrap gap-4">
-                <a href="#collection" className="btn-gold">Shop the Collection</a>
+                {/* Eric: "Add a cool animation to this" — a light sweeps
+                    across each button on hover (hero-cta-shine, see
+                    globals.css), scoped to just these two hero buttons
+                    rather than every btn-gold/btn-outline site-wide. */}
+                <a href="#collection" className="btn-gold hero-cta-shine">Shop the Collection</a>
                 {orderNumber && (
                   <a
                     href={waHref(orderNumber, "Hi Rolen! I'd like to ask about a custom order.")}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="btn-outline !border-cream/40 !text-cream hover:!bg-cream hover:!text-ink"
+                    className="btn-outline hero-cta-shine !border-cream/40 !text-cream hover:!bg-cream hover:!text-ink"
                   >
                     Custom Orders
                   </a>
                 )}
               </Reveal>
             </div>
-            <Reveal delay={0.1} className="hidden md:block shrink-0">
-              <Image
+            {/* Eric: "Add a cool animation to this" — the logo now floats
+                with a soft pulsing glow behind it (HeroVisual, already used
+                on the /school hero) instead of sitting static. Sized to fit
+                this narrower slot beside the text block via HeroVisual's
+                overridable sizing props. */}
+            <div className="hidden md:block shrink-0">
+              <HeroVisual
                 src="/images/rolen-logo.png"
                 alt="Rolen"
                 width={280}
                 height={280}
-                className="w-40 lg:w-52 xl:w-60 h-auto object-contain"
+                imgClassName="relative w-40 lg:w-52 xl:w-60 h-auto object-contain"
+                center={false}
               />
-            </Reveal>
+            </div>
           </div>
         </div>
       </section>

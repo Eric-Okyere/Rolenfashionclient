@@ -31,10 +31,21 @@ export default async function AdmissionsPage() {
           Fill out the form below to apply. You&apos;ll receive an application number immediately — use it to track your
           status and, once admitted, download your signed admission letter.
         </p>
-        <div className="flex items-center justify-center gap-3 text-sm text-ink/60">
+        <div className="flex flex-wrap items-center justify-center gap-3 text-sm text-ink/60">
           <span>Already applied?</span>
           <Link href="/admissions/status" className="btn-outline text-sm">
             Track My Application Status
+          </Link>
+          {/* Eric: "Put the payment of fees in the admission page in the form
+              of a button." The actual MoMo checkout needs to know which
+              application is paying and its deposit amount (see
+              StatusChecker.js's "Pay Deposit via MoMo" button, which only
+              appears once an admitted applicant's own record is loaded), so
+              this button leads straight into that same tracker rather than
+              duplicating the lookup form here — the real Pay button shows up
+              the instant their application is found. */}
+          <Link href="/admissions/status" className="btn-gold text-sm">
+            💳 Pay Fees via MoMo
           </Link>
         </div>
         {/* Eric: "add the school second number to the form" — the apply form
