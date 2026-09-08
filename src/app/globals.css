@@ -77,6 +77,14 @@ body {
   padding: 0.7rem 1.5rem;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
   box-shadow: 0 4px 14px rgba(184, 134, 11, 0.25);
+  /* Eric: "Some of the pages are not responsive on mobile device" — pill
+     buttons were squeezing down to fit a narrow flex row on phones, which
+     wrapped their label onto 2-3 lines inside the pill (e.g. "Chat With
+     Us", "Start Application"). white-space:nowrap keeps every button's
+     label on one line; the flex-wrap added to each button row (page.js,
+     school/page.js) is what now lets the *row* break onto a new line
+     instead, so the buttons simply stack full-width on narrow screens. */
+  white-space: nowrap;
 }
 .btn-gold:hover {
   transform: translateY(-1px);
@@ -94,6 +102,7 @@ body {
   font-weight: 600;
   padding: 0.65rem 1.45rem;
   transition: background 0.15s ease, color 0.15s ease;
+  white-space: nowrap;
 }
 .btn-outline:hover {
   background: var(--ink);

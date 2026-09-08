@@ -262,7 +262,7 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
                   <p className="font-medium">{item.title}</p>
                   {item.description && <p className="text-sm text-cream/70 max-w-md">{item.description}</p>}
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center flex-wrap gap-3">
                   {item.price && <p className="text-gold-light font-semibold whitespace-nowrap">GHS {Number(item.price).toLocaleString()}</p>}
                   {/* Only offered when the product has a published price —
                       there's nothing to charge otherwise, so this button

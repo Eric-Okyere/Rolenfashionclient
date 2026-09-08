@@ -13,7 +13,13 @@ import Counter from '@/components/motion/Counter';
 // app/page.js (now the Shop) and Navbar.js. Content here is otherwise
 // unchanged from the old Home page: hero, stats, about snippet, courses
 // preview, admissions CTA, testimonials.
-export const metadata = { title: 'The School' };
+// Eric: "Let the school page be Rolen School of Fashion and Design" — this
+// is what shows as the browser tab title and the name used when the page is
+// shared (search results, link previews). Uses `absolute` for the same
+// reason as the shop page (see app/page.js) — bypasses the root layout's
+// "%s | <school name>" title template so the tab reads exactly this, not
+// doubled up.
+export const metadata = { title: { absolute: 'Rolen School of Fashion and Design' } };
 
 export default async function SchoolPage() {
   const [coursesData, testimonialsData, galleryData, settingsData] = await Promise.all([
@@ -139,7 +145,7 @@ export default async function SchoolPage() {
               the moment you&apos;re admitted.
             </p>
           </div>
-          <div className="flex md:justify-end gap-4">
+          <div className="flex flex-wrap md:justify-end gap-4">
             <Link href="/admissions" className="btn-gold">Start Application</Link>
             <Link href="/admissions/status" className="btn-outline !border-cream/40 !text-cream hover:!bg-cream hover:!text-ink">
               Track Status

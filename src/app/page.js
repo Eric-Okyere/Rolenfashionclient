@@ -19,7 +19,14 @@ import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 // the navbar; this page owns "/". The public shop URL used to be /gallery —
 // that route now redirects here (preserving ?category/&video) so old links
 // and bookmarks still work, see app/gallery/page.js.
-export const metadata = { title: 'Shop' };
+// Eric: "Let the shop page name be Rolen Fashion and Design" — this is what
+// shows as the browser tab title and the name used when the page is shared
+// (search results, link previews). The root layout's generateMetadata()
+// sets a title *template* ("%s | <school name>") that every page's title
+// normally gets appended to — using `absolute` here bypasses that so the
+// tab reads exactly "Rolen Fashion and Design", not doubled up with the
+// school's own name.
+export const metadata = { title: { absolute: 'Rolen Fashion and Design' } };
 
 // Eric's finalized brand-line structure — names, taglines and sub-lines
 // given directly by him. The server's Gallery model keeps every older
@@ -454,7 +461,7 @@ export default async function ShopPage({ searchParams }) {
               find or create the right piece.
             </p>
           </div>
-          <div className="flex md:justify-end gap-4">
+          <div className="flex flex-wrap md:justify-end gap-4">
             {orderNumber ? (
               <a
                 href={waHref(orderNumber, 'Hi Rolen! I have a question about a product.')}
