@@ -12,16 +12,22 @@ import { mediaUrl } from '@/lib/api';
 // lives at /school. Kept an explicit "Shop" link here too (not just the
 // logo) since a visitor browsing /school, /courses, etc. still needs one
 // click back to the product catalog specifically.
+// Eric: "If school clicked show courses, admission else hide them" —
+// `schoolOnly` marks the two links that only make sense once a visitor is
+// in the School side of the site; see `isSchoolSection` below for how
+// that's decided and where these get filtered out on the Shop.
 const links = [
   { href: '/', label: 'Shop' },
   { href: '/school', label: 'School' },
   { href: '/about', label: 'About' },
-  { href: '/courses', label: 'Courses' },
-  { href: '/admissions', label: 'Admissions' },
+  { href: '/courses', label: 'Courses', schoolOnly: true },
+  { href: '/admissions', label: 'Admissions', schoolOnly: true },
   { href: '/contact', label: 'Contact' },
 ];
 
 const FALLBACK_LOGO = '/images/rolen-logo.png';
+const SHOP_NAME = 'Rolen Fashion and Design';
+const SCHOOL_NAME_FALLBACK = 'Rolen School of Fashion and Design';
 
 export default function Navbar({ settings }) {
   const [open, setOpen] = useState(false);
@@ -47,6 +53,16 @@ export default function Navbar({ settings }) {
   }
   const pathname = usePathname();
   const logo = settings?.logoUrl && !logoError ? mediaUrl(settings.logoUrl) : FALLBACK_LOGO;
+
+  // Eric: "The name in the navbar should be 2. One for shop and other for
+  // school." — the Shop only ever owns "/" (see app/page.js's comment on
+  // why); every other public route (School, About, Courses, Admissions,
+  // Contact) is School-side. The displayed name next to the logo, and
+  // which nav links show at all (see `links`'s `schoolOnly` above), both
+  // key off this same section split.
+  const isSchoolSection = pathname !== '/';
+  const displayName = isSchoolSection ? settings?.schoolName || SCHOOL_NAME_FALLBACK : SHOP_NAME;
+  const visibleLinks = links.filter((l) => !l.schoolOnly || isSchoolSection);
 
   // Shrinks and gains a shadow once the page scrolls — a plain state/CSS
   // toggle rather than a framer-motion transform, since this header is
@@ -79,7 +95,7 @@ export default function Navbar({ settings }) {
           >
             <Image
               src={logo}
-              alt={settings?.schoolName || 'Rolen School of Fashion and Design'}
+              alt={displayName}
               width={40}
               height={40}
               className="h-9 w-9 md:h-10 md:w-10 object-contain shrink-0"
@@ -90,13 +106,13 @@ export default function Navbar({ settings }) {
               }}
             />
             <span className="font-display text-base md:text-lg font-semibold leading-tight truncate">
-              {settings?.schoolName || 'Rolen School of Fashion and Design'}
+              {displayName}
             </span>
           </motion.span>
         </Link>
 
         <div className="hidden md:flex items-center gap-7 shrink-0">
-          {links.map((l) => (
+          {visibleLinks.map((l) => (
             <Link
               key={l.href}
               href={l.href}
@@ -148,7 +164,7 @@ export default function Navbar({ settings }) {
             className="md:hidden border-t border-black/5 bg-cream overflow-hidden"
           >
             <div className="container-page py-3 flex flex-col gap-3">
-              {links.map((l) => (
+              {visibleLinks.map((l) => (
                 <Link key={l.href} href={l.href} onClick={() => setOpen(false)} className="text-sm font-medium text-ink/80">
                   {l.label}
                 </Link>
