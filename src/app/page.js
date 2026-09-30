@@ -176,7 +176,7 @@ export default async function ShopPage({ searchParams }) {
                 Rolen Studio &middot; {settings.city || 'Accra'}, {settings.country || 'Ghana'}
               </Reveal>
               <Reveal as="h1" delay={0.08} className="font-display text-4xl md:text-5xl leading-tight mb-3">
-                Simply <span className="gold-gradient-text">Elegance</span>.
+                Simply <span className="gold-gradient-text">Elegant</span>.
               </Reveal>
               {/* Eric: "Add a cool animation to this" — a thin gold rule
                   that draws itself in under the headline, once, right after
