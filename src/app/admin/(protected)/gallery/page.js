@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { apiFetch, mediaUrl } from '@/lib/api';
+import { resizeImageFile } from '@/lib/imageResize';
 import MediaCover from '@/components/MediaCover';
 
 // The shop's current brand-line structure. Older values (Nuptials, Kente,
@@ -20,6 +21,11 @@ export default function AdminGalleryPage() {
   const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  // True only while chosen photos are being downscaled in the browser (see
+  // imageResize.js) — a distinct flag from `loading` (which covers the
+  // actual upload) since this happens the moment files are picked, before
+  // "Post Product" is ever clicked.
+  const [resizingPhotos, setResizingPhotos] = useState(false);
 
   async function load() {
     const data = await apiFetch('/api/gallery?all=1');
@@ -51,15 +57,26 @@ export default function AdminGalleryPage() {
     return () => URL.revokeObjectURL(url);
   }, [videoFile]);
 
-  function handlePhotosChosen(fileList) {
-    const files = Array.from(fileList);
+  // Eric: "let the form be able to take large pictures... instead of
+  // reducing the quality" — each chosen photo is downscaled to web-display
+  // size (imageResize.js) right here, before it ever reaches the preview
+  // or the upload, so a 25MB camera photo clears Cloudinary's 10MB
+  // free-plan cap without Eric needing to resize anything by hand.
+  async function handlePhotosChosen(fileList) {
+    let files = Array.from(fileList);
     if (files.length > 5) {
       setError('Choose at most 5 photos.');
-      setImageFiles(files.slice(0, 5));
-      return;
+      files = files.slice(0, 5);
+    } else {
+      setError(null);
     }
-    setError(null);
-    setImageFiles(files);
+    setResizingPhotos(true);
+    try {
+      const resized = await Promise.all(files.map((f) => resizeImageFile(f)));
+      setImageFiles(resized);
+    } finally {
+      setResizingPhotos(false);
+    }
   }
 
   function removePhoto(index) {
@@ -149,6 +166,7 @@ export default function AdminGalleryPage() {
               onChange={(e) => handlePhotosChosen(e.target.files)}
               className="w-full text-sm"
             />
+            {resizingPhotos && <p className="text-xs text-muted mt-1">Optimizing photo(s)…</p>}
             {imageFiles.length > 0 && (
               <div className="flex flex-wrap gap-2 mt-2">
                 {imageFiles.map((f, i) => (

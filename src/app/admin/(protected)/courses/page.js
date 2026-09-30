@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { apiFetch, API_URL, mediaUrl } from '@/lib/api';
+import { resizeImageFile } from '@/lib/imageResize';
 import MediaCover from '@/components/MediaCover';
 
 const emptyCourse = {
@@ -14,6 +15,7 @@ export default function AdminCoursesPage() {
   const [editing, setEditing] = useState(null); // course object or null
   const [form, setForm] = useState(emptyCourse);
   const [file, setFile] = useState(null);
+  const [resizingFile, setResizingFile] = useState(false);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
 
@@ -130,7 +132,24 @@ export default function AdminCoursesPage() {
           </label>
           <label className="text-sm block">
             <span className="block mb-1 font-medium">Cover Image</span>
-            <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
+            <input
+              type="file"
+              accept="image/*"
+              onChange={async (e) => {
+                const picked = e.target.files[0];
+                if (!picked) return setFile(null);
+                // See Gallery & Shop's handlePhotosChosen for why — downscales a
+                // large photo in the browser so it clears Cloudinary's 10MB
+                // free-plan cap without losing visible quality.
+                setResizingFile(true);
+                try {
+                  setFile(await resizeImageFile(picked));
+                } finally {
+                  setResizingFile(false);
+                }
+              }}
+            />
+            {resizingFile && <p className="text-xs text-muted mt-1">Optimizing photo…</p>}
           </label>
           <label className="text-sm flex items-center gap-2">
             <input type="checkbox" checked={form.isPublished} onChange={(e) => setForm({ ...form, isPublished: e.target.checked })} />

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { apiFetch, mediaUrl } from '@/lib/api';
+import { resizeImageFile } from '@/lib/imageResize';
 import MediaCover from '@/components/MediaCover';
 
 // Same 5 brand lines used on the Gallery form — a slide's CTA can point at
@@ -19,6 +20,7 @@ export default function AdminCarouselPage() {
   const [videoPreviewUrl, setVideoPreviewUrl] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [resizingPhoto, setResizingPhoto] = useState(false);
 
   async function load() {
     const data = await apiFetch('/api/carousel?all=1');
@@ -54,6 +56,22 @@ export default function AdminCarouselPage() {
     setVideoPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [videoFile]);
+
+  // See the same-purpose comment on Gallery & Shop's handlePhotosChosen —
+  // downscales a large photo in the browser before it's previewed or
+  // uploaded, so it clears Cloudinary's 10MB free-plan cap.
+  async function handlePhotoChosen(file) {
+    if (!file) {
+      setImageFile(null);
+      return;
+    }
+    setResizingPhoto(true);
+    try {
+      setImageFile(await resizeImageFile(file));
+    } finally {
+      setResizingPhoto(false);
+    }
+  }
 
   async function handleUpload(e) {
     e.preventDefault();
@@ -134,7 +152,8 @@ export default function AdminCarouselPage() {
         <div className="grid sm:grid-cols-2 gap-4">
           <label className="text-sm block">
             <span className="block mb-1 font-medium">Photo</span>
-            <input type="file" accept="image/*" onChange={(e) => setImageFile(e.target.files[0])} className="w-full text-sm" />
+            <input type="file" accept="image/*" onChange={(e) => handlePhotoChosen(e.target.files[0])} className="w-full text-sm" />
+            {resizingPhoto && <p className="text-xs text-muted mt-1">Optimizing photo…</p>}
           </label>
           <label className="text-sm block">
             <span className="block mb-1 font-medium">Video</span>
