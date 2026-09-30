@@ -51,7 +51,7 @@ export default async function CourseDetailPage({ params }) {
           <Row label="Level" value={course.level} />
           <Row
             label="Tuition"
-            value={course.fee ? `${course.feeCurrency || 'GHS'} ${Number(course.fee).toLocaleString()}` : 'Contact us for pricing'}
+            value={course.fee ? `${course.feeCurrency || 'GH¢'} ${Number(course.fee).toLocaleString()}` : 'Contact us for pricing'}
           />
           {course.intakePeriods?.length > 0 && <Row label="Intakes" value={course.intakePeriods.join(', ')} />}
           <Link href={`/admissions?course=${course._id}`} className="btn-gold w-full mt-2">

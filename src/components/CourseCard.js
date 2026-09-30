@@ -30,7 +30,7 @@ export default function CourseCard({ course }) {
         <div className="mt-auto flex items-center justify-between text-sm">
           <span className="text-ink/70">{course.duration}</span>
           <span className="font-semibold text-gold-dark">
-            {course.fee ? `${course.feeCurrency || 'GHS'} ${Number(course.fee).toLocaleString()}` : 'Contact us'}
+            {course.fee ? `${course.feeCurrency || 'GH¢'} ${Number(course.fee).toLocaleString()}` : 'Contact us'}
           </span>
         </div>
       </div>

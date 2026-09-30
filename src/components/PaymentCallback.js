@@ -57,7 +57,7 @@ export default function PaymentCallback() {
           <p className="text-4xl mb-3">✅</p>
           <p className="text-lg font-medium mb-2">Payment Successful</p>
           <p className="text-sm text-muted mb-1">
-            GHS {Number(result.amount).toLocaleString()} received.
+            GH¢ {Number(result.amount).toLocaleString()} received.
           </p>
           <p className="text-xs text-muted mb-6">Reference: {result.reference}</p>
           {result.type === 'admission_fee' ? (

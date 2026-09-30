@@ -6,7 +6,7 @@ import MediaCover from '@/components/MediaCover';
 
 const emptyCourse = {
   title: '', category: 'Fashion Design', summary: '', description: '', duration: '', level: 'All Levels',
-  fee: '', feeCurrency: 'GHS', depositAmount: '', intakePeriods: '', curriculum: '', isPublished: true,
+  fee: '', feeCurrency: 'GH¢', depositAmount: '', intakePeriods: '', curriculum: '', isPublished: true,
 };
 
 export default function AdminCoursesPage() {

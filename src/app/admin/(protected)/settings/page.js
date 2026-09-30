@@ -206,7 +206,7 @@ export default function AdminSettingsPage() {
               rows={3}
               value={form.tuitionText || ''}
               onChange={(e) => update('tuitionText', e.target.value)}
-              placeholder={'Tuition for the Beginner class (6 months) is GHS 7,000. Tuition for the Advanced class (3 months) is GHS 10,000.'}
+              placeholder={'Tuition for the Beginner class (6 months) is GH¢ 7,000. Tuition for the Advanced class (3 months) is GH¢ 10,000.'}
               className="w-full rounded-lg border border-black/15 p-2.5"
             />
           </label>
@@ -221,7 +221,7 @@ export default function AdminSettingsPage() {
               value={form.paymentScheduleText || ''}
               onChange={(e) => update('paymentScheduleText', e.target.value)}
               placeholder={
-                'For Beginners, the duration is Six (6) months. The cost is Seven Thousand Ghana Cedis (GHS 7,000.00).\n\nPayment Schedule: GHS 5,000.00 payable before commencement of class and the balance paid within a scheduled 3-month installments.'
+                'For Beginners, the duration is Six (6) months. The cost is Seven Thousand Ghana Cedis (GH¢7,000.00).\n\nPayment Schedule: GH¢5,000.00 payable before commencement of class and the balance paid within a scheduled 3-month installments.'
               }
               className="w-full rounded-lg border border-black/15 p-2.5"
             />

@@ -124,7 +124,7 @@ export default function AdminGalleryPage() {
             </select>
           </label>
           <label className="text-sm block">
-            <span className="block mb-1 font-medium">Price (GHS, optional — for items sold)</span>
+            <span className="block mb-1 font-medium">Price (GH¢, optional — for items sold)</span>
             <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
           </label>
           <label className="text-sm flex items-center gap-2 mt-6">
@@ -197,7 +197,7 @@ export default function AdminGalleryPage() {
             </div>
             <div className="p-3">
               <p className="text-sm font-medium truncate">{item.title}</p>
-              <p className="text-xs text-muted">{item.category}{item.price ? ` · GHS ${item.price}` : ''}</p>
+              <p className="text-xs text-muted">{item.category}{item.price ? ` · GH¢ ${item.price}` : ''}</p>
               <div className="flex justify-between mt-2 text-xs">
                 <button onClick={() => togglePublish(item)} className="text-gold-dark hover:underline">
                   {item.isPublished ? 'Unpublish' : 'Publish'}

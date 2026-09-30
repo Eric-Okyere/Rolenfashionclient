@@ -79,7 +79,7 @@ export default function ApplicationDetailPage() {
             label="Fee Deposit (MoMo)"
             value={
               application.feePaymentStatus === 'paid'
-                ? `Paid — GHS ${Number(application.feeAmountPaid || 0).toLocaleString()} (${application.feePaymentReference || 'ref n/a'})`
+                ? `Paid — GH¢ ${Number(application.feeAmountPaid || 0).toLocaleString()} (${application.feePaymentReference || 'ref n/a'})`
                 : 'Not yet paid'
             }
           />

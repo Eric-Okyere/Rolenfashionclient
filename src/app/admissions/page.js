@@ -111,7 +111,7 @@ export default async function AdmissionsPage() {
                 <div className="flex items-center justify-between text-sm">
                   <span className="text-ink/70">{c.duration}</span>
                   <span className="font-semibold text-gold-dark">
-                    {c.fee ? `${c.feeCurrency || 'GHS'} ${Number(c.fee).toLocaleString()}` : 'Contact us'}
+                    {c.fee ? `${c.feeCurrency || 'GH¢'} ${Number(c.fee).toLocaleString()}` : 'Contact us'}
                   </span>
                 </div>
               </div>

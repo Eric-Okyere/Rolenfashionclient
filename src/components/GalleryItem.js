@@ -49,7 +49,7 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
   const hasMultipleMedia = mediaItems.length > 1;
   const currentMedia = mediaItems[mediaIndex];
   const orderNumber = splitNumbers(whatsapp)[0];
-  const orderMessage = `Hi Rolen! I'd like to order: ${item.title}${item.price ? ` (GHS ${Number(item.price).toLocaleString()})` : ''}.`;
+  const orderMessage = `Hi Rolen! I'd like to order: ${item.title}${item.price ? ` (GH¢ ${Number(item.price).toLocaleString()})` : ''}.`;
 
   // Eric: "Students must pay their fees through Momo on 0209317581", then
   // asked for a way to enter a phone number and have the money deducted
@@ -139,7 +139,7 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
           <p className="text-white text-sm font-medium">{item.title}</p>
-          {item.price && <p className="text-gold-light text-xs">GHS {Number(item.price).toLocaleString()}</p>}
+          {item.price && <p className="text-gold-light text-xs">GH¢ {Number(item.price).toLocaleString()}</p>}
         </div>
         {hasVideo && (
           <span className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">▶ Video</span>
@@ -263,7 +263,7 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
                   {item.description && <p className="text-sm text-cream/70 max-w-md">{item.description}</p>}
                 </div>
                 <div className="flex items-center flex-wrap gap-3">
-                  {item.price && <p className="text-gold-light font-semibold whitespace-nowrap">GHS {Number(item.price).toLocaleString()}</p>}
+                  {item.price && <p className="text-gold-light font-semibold whitespace-nowrap">GH¢ {Number(item.price).toLocaleString()}</p>}
                   {/* Only offered when the product has a published price —
                       there's nothing to charge otherwise, so this button
                       never appears next to a "contact for pricing" item. */}
@@ -298,7 +298,7 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
                   className="mt-3 bg-cream/5 border border-cream/15 rounded-lg p-4 space-y-3"
                 >
                   <p className="text-cream text-sm font-medium">
-                    Pay GHS {Number(item.price).toLocaleString()} for {item.title}
+                    Pay GH¢ {Number(item.price).toLocaleString()} for {item.title}
                   </p>
                   <p className="text-cream/60 text-xs">
                     You&apos;ll enter your Mobile Money number and approve the payment on your own phone next.

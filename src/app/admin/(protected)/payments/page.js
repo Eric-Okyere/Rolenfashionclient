@@ -54,7 +54,7 @@ export default function AdminPaymentsPage() {
 
       <div className="card p-5 mb-6 inline-block">
         <p className="text-xs text-muted mb-1">Total received (successful payments)</p>
-        <p className="text-2xl font-display">GHS {totalReceived.toLocaleString()}</p>
+        <p className="text-2xl font-display">GH¢ {totalReceived.toLocaleString()}</p>
       </div>
 
       {loading ? (
@@ -91,7 +91,7 @@ export default function AdminPaymentsPage() {
                     <div>{p.name || '—'}</div>
                     <div className="text-xs text-muted">{p.email}</div>
                   </td>
-                  <td className="p-3 whitespace-nowrap">GHS {Number(p.amount).toLocaleString()}</td>
+                  <td className="p-3 whitespace-nowrap">GH¢ {Number(p.amount).toLocaleString()}</td>
                   <td className="p-3">
                     <span className={`inline-block px-2.5 py-1 rounded-full text-xs font-medium ${STATUS_COLOR[p.status] || ''}`}>
                       {p.status}

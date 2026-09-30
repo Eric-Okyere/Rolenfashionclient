@@ -143,7 +143,7 @@ export default function StatusChecker() {
             {canPayDeposit && (
               <div className="mt-4 pt-4 border-t border-black/10">
                 <p className="text-sm text-ink/80 mb-1">
-                  Fee deposit due: <span className="font-semibold">GHS {Number(depositAmount).toLocaleString()}</span>
+                  Fee deposit due: <span className="font-semibold">GH¢ {Number(depositAmount).toLocaleString()}</span>
                 </p>
                 <p className="text-xs text-muted mb-3">
                   Pay securely by Mobile Money — you&apos;ll enter your MoMo number and approve the payment on your
