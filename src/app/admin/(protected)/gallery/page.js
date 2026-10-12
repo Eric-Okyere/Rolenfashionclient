@@ -27,6 +27,20 @@ export default function AdminGalleryPage() {
   // "Post Product" is ever clicked.
   const [resizingPhotos, setResizingPhotos] = useState(false);
 
+  // Eric: "Let a product be edited in the gallery and shop page" — a
+  // separate set of state for the edit modal, deliberately not reusing the
+  // Post form's own state above, so editing one product can never clobber
+  // whatever's half-typed into the "Post a Product" form.
+  const [editingItem, setEditingItem] = useState(null); // the full item object, or null when the modal is closed
+  const [editForm, setEditForm] = useState({ title: '', description: '', category: 'Other', price: '', isFeatured: false });
+  const [editImageFiles, setEditImageFiles] = useState([]); // empty = keep existing photos
+  const [editVideoFile, setEditVideoFile] = useState(null); // null = keep existing video
+  const [editImagePreviewUrls, setEditImagePreviewUrls] = useState([]);
+  const [editVideoPreviewUrl, setEditVideoPreviewUrl] = useState(null);
+  const [editResizingPhotos, setEditResizingPhotos] = useState(false);
+  const [editError, setEditError] = useState(null);
+  const [editLoading, setEditLoading] = useState(false);
+
   async function load() {
     const data = await apiFetch('/api/gallery?all=1');
     setItems(data.items);
@@ -52,10 +66,25 @@ export default function AdminGalleryPage() {
       return undefined;
     }
     const url = URL.createObjectURL(videoFile);
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing a browser object URL to the chosen File, not derivable at render time
     setVideoPreviewUrl(url);
     return () => URL.revokeObjectURL(url);
   }, [videoFile]);
+  useEffect(() => {
+    const urls = editImageFiles.map((f) => URL.createObjectURL(f));
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing browser object URLs to the chosen Files, not derivable at render time
+    setEditImagePreviewUrls(urls);
+    return () => urls.forEach((u) => URL.revokeObjectURL(u));
+  }, [editImageFiles]);
+  useEffect(() => {
+    if (!editVideoFile) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- clearing the preview when the selection is removed, not derivable at render time
+      setEditVideoPreviewUrl(null);
+      return undefined;
+    }
+    const url = URL.createObjectURL(editVideoFile);
+    setEditVideoPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [editVideoFile]);
 
   // Eric: "let the form be able to take large pictures... instead of
   // reducing the quality" — each chosen photo is downscaled to web-display
@@ -115,6 +144,72 @@ export default function AdminGalleryPage() {
   async function togglePublish(item) {
     await apiFetch(`/api/gallery/${item._id}`, { method: 'PUT', body: JSON.stringify({ isPublished: !item.isPublished }) });
     await load();
+  }
+
+  // --- Edit modal: opened per-product by the "Edit" button below ---
+  function startEdit(item) {
+    setEditingItem(item);
+    setEditForm({
+      title: item.title || '',
+      description: item.description || '',
+      category: item.category || 'Other',
+      price: item.price ?? '',
+      isFeatured: !!item.isFeatured,
+    });
+    setEditImageFiles([]);
+    setEditVideoFile(null);
+    setEditError(null);
+  }
+
+  function cancelEdit() {
+    setEditingItem(null);
+  }
+
+  // Same downscale-before-upload treatment as the Post form (Eric: "let the
+  // form be able to take large pictures... instead of reducing the
+  // quality") — kept as a separate function so it only ever touches the
+  // edit modal's own file state.
+  async function handleEditPhotosChosen(fileList) {
+    let files = Array.from(fileList);
+    if (files.length > 5) {
+      setEditError('Choose at most 5 photos.');
+      files = files.slice(0, 5);
+    } else {
+      setEditError(null);
+    }
+    setEditResizingPhotos(true);
+    try {
+      const resized = await Promise.all(files.map((f) => resizeImageFile(f)));
+      setEditImageFiles(resized);
+    } finally {
+      setEditResizingPhotos(false);
+    }
+  }
+
+  function removeEditPhoto(index) {
+    setEditImageFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
+  async function handleEditSubmit(e) {
+    e.preventDefault();
+    setEditLoading(true);
+    setEditError(null);
+    try {
+      const fd = new FormData();
+      Object.entries(editForm).forEach(([k, v]) => fd.append(k, v));
+      // Photos/video are only appended — and therefore only replaced on the
+      // server — when the admin actually chose new ones; leaving both empty
+      // keeps the product's existing media untouched.
+      editImageFiles.forEach((f) => fd.append('images', f));
+      if (editVideoFile) fd.append('video', editVideoFile);
+      await apiFetch(`/api/gallery/${editingItem._id}`, { method: 'PUT', body: fd });
+      setEditingItem(null);
+      await load();
+    } catch (err) {
+      setEditError(err.message);
+    } finally {
+      setEditLoading(false);
+    }
   }
 
   return (
@@ -220,6 +315,7 @@ export default function AdminGalleryPage() {
                 <button onClick={() => togglePublish(item)} className="text-gold-dark hover:underline">
                   {item.isPublished ? 'Unpublish' : 'Publish'}
                 </button>
+                <button onClick={() => startEdit(item)} className="hover:underline">Edit</button>
                 <button onClick={() => handleDelete(item._id)} className="text-red-600 hover:underline">Delete</button>
               </div>
             </div>
@@ -227,6 +323,88 @@ export default function AdminGalleryPage() {
         ))}
       </div>
       {items.length === 0 && <p className="text-center text-muted py-8">No products yet — post your first one above.</p>}
+
+      {editingItem && (
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-start sm:items-center justify-center p-4 overflow-y-auto">
+          <form
+            onSubmit={handleEditSubmit}
+            className="card p-6 space-y-4 w-full max-w-lg my-8"
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="font-display text-lg">Edit Product</h2>
+              <button type="button" onClick={cancelEdit} aria-label="Close" className="text-muted hover:text-ink text-xl leading-none">×</button>
+            </div>
+            {editError && <div className="rounded-lg bg-red-50 text-red-700 text-sm p-3">{editError}</div>}
+            <div className="grid md:grid-cols-2 gap-4">
+              <label className="text-sm block">
+                <span className="block mb-1 font-medium">Title</span>
+                <input required value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
+              </label>
+              <label className="text-sm block">
+                <span className="block mb-1 font-medium">Category</span>
+                <select value={editForm.category} onChange={(e) => setEditForm({ ...editForm, category: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5 bg-white">
+                  {categories.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </label>
+              <label className="text-sm block">
+                <span className="block mb-1 font-medium">Price (GH¢, optional — for items sold)</span>
+                <input type="number" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
+              </label>
+              <label className="text-sm flex items-center gap-2 mt-6">
+                <input type="checkbox" checked={editForm.isFeatured} onChange={(e) => setEditForm({ ...editForm, isFeatured: e.target.checked })} />
+                Feature on homepage
+              </label>
+            </div>
+            <label className="text-sm block">
+              <span className="block mb-1 font-medium">Description</span>
+              <textarea rows={2} value={editForm.description} onChange={(e) => setEditForm({ ...editForm, description: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
+            </label>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <label className="text-sm block">
+                <span className="block mb-1 font-medium">Replace Photos (optional)</span>
+                <p className="text-xs text-muted mb-1">Leave empty to keep the {editingItem.imageUrls?.length || 1} current photo{(editingItem.imageUrls?.length || 1) > 1 ? 's' : ''}. Choosing new ones replaces the whole set.</p>
+                <input
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={(e) => handleEditPhotosChosen(e.target.files)}
+                  className="w-full text-sm"
+                />
+                {editResizingPhotos && <p className="text-xs text-muted mt-1">Optimizing photo(s)…</p>}
+                {editImageFiles.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {editImageFiles.map((f, i) => (
+                      <div key={`${f.name}-${i}`} className="relative w-20 h-20 shrink-0">
+                        <MediaCover src={editImagePreviewUrls[i]} alt={f.name} className="w-full h-full rounded-lg" />
+                        <button
+                          type="button"
+                          onClick={() => removeEditPhoto(i)}
+                          aria-label={`Remove ${f.name}`}
+                          className="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-full bg-ink text-white text-xs leading-5 hover:bg-black"
+                        >
+                          ×
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </label>
+              <label className="text-sm block">
+                <span className="block mb-1 font-medium">Replace Video (optional)</span>
+                <p className="text-xs text-muted mb-1">{editingItem.videoUrl ? 'Leave empty to keep the current video.' : 'This product has no video yet.'}</p>
+                <input type="file" accept="video/*" onChange={(e) => setEditVideoFile(e.target.files[0])} className="w-full text-sm" />
+                {editVideoPreviewUrl && (
+                  <MediaCover src={editVideoPreviewUrl} type="video" alt="Video preview" className="w-full aspect-video rounded-lg mt-2" />
+                )}
+              </label>
+            </div>
+            <div className="flex gap-3">
+              <button type="submit" disabled={editLoading} className="btn-gold">{editLoading ? 'Saving…' : 'Save Changes'}</button>
+              <button type="button" onClick={cancelEdit} className="text-sm text-muted hover:text-ink">Cancel</button>
+            </div>
+          </form>
+        </div>
+      )}
     </div>
   );
 }
