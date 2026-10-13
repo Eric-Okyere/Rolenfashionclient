@@ -116,10 +116,10 @@ export default async function ShopPage({ searchParams }) {
   const query = qs.toString() ? `?${qs.toString()}` : '';
 
   const [{ items }, settingsData, testimonialsData, carouselData] = await Promise.all([
-    safeFetch(`/api/gallery${query}`, { items: [] }),
-    safeFetch('/api/settings', { settings: {} }),
-    safeFetch('/api/testimonials', { testimonials: [] }),
-    safeFetch('/api/carousel', { posts: [] }),
+    safeFetch(`/api/gallery${query}`, { items: [] }, { revalidate: 60 }),
+    safeFetch('/api/settings', { settings: {} }, { revalidate: 60 }),
+    safeFetch('/api/testimonials', { testimonials: [] }, { revalidate: 60 }),
+    safeFetch('/api/carousel', { posts: [] }, { revalidate: 60 }),
   ]);
 
   const settings = settingsData.settings || {};
@@ -134,7 +134,7 @@ export default async function ShopPage({ searchParams }) {
   // and avoids a redundant second request), and only fetch the unfiltered
   // set separately when a category/video filter is active and `items` is
   // just that narrower slice.
-  const showcaseItems = !category && !videoOnly ? items || [] : (await safeFetch('/api/gallery', { items: [] })).items || [];
+  const showcaseItems = !category && !videoOnly ? items || [] : (await safeFetch('/api/gallery', { items: [] }, { revalidate: 60 })).items || [];
 
   // The "Featured" strip only makes sense on the unfiltered view (it's a
   // curated cross-section of every category) — it hides itself below when

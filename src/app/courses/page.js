@@ -11,7 +11,7 @@ export default async function CoursesPage({ searchParams }) {
   const params = await searchParams;
   const category = params?.category && params.category !== 'All' ? params.category : undefined;
   const query = category ? `?category=${encodeURIComponent(category)}` : '';
-  const { courses } = await safeFetch(`/api/courses${query}`, { courses: [] });
+  const { courses } = await safeFetch(`/api/courses${query}`, { courses: [] }, { revalidate: 60 });
 
   return (
     <div className="container-page py-16">

@@ -3,16 +3,24 @@ import { notFound } from 'next/navigation';
 import { safeFetch, mediaUrl } from '@/lib/api';
 import Reveal from '@/components/motion/Reveal';
 
+// Statically cached and regenerated at most once every 60 seconds (ISR) —
+// this page doesn't read searchParams/cookies/headers, so Next.js can serve
+// it straight from cache for repeat visits instead of re-running this route
+// as a Netlify serverless function every time. Eric: cut function-invocation
+// usage after the site's traffic blew past Netlify's free-plan function
+// limit and paused every project on the team.
+export const revalidate = 60;
+
 export async function generateMetadata({ params }) {
   const { slug } = await params;
-  const data = await safeFetch(`/api/courses/${slug}`, null);
+  const data = await safeFetch(`/api/courses/${slug}`, null, { revalidate: 60 });
   if (!data?.course) return { title: 'Course' };
   return { title: data.course.title, description: data.course.summary };
 }
 
 export default async function CourseDetailPage({ params }) {
   const { slug } = await params;
-  const data = await safeFetch(`/api/courses/${slug}`, null);
+  const data = await safeFetch(`/api/courses/${slug}`, null, { revalidate: 60 });
   if (!data?.course) return notFound();
   const course = data.course;
 

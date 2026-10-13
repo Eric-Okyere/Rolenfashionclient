@@ -8,7 +8,7 @@ const defaultSettings = {
 };
 
 export async function generateMetadata() {
-  const data = await safeFetch('/api/settings', { settings: defaultSettings });
+  const data = await safeFetch('/api/settings', { settings: defaultSettings }, { revalidate: 60 });
   const settings = data.settings || defaultSettings;
   return {
     metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),
@@ -29,7 +29,7 @@ export async function generateMetadata() {
 }
 
 export default async function RootLayout({ children }) {
-  const data = await safeFetch('/api/settings', { settings: defaultSettings });
+  const data = await safeFetch('/api/settings', { settings: defaultSettings }, { revalidate: 60 });
   const settings = data.settings || defaultSettings;
 
   return (

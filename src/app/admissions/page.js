@@ -7,12 +7,20 @@ import Reveal from '@/components/motion/Reveal';
 import PhoneIcon from '@/components/icons/PhoneIcon';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 
+// Statically cached and regenerated at most once every 60 seconds (ISR) —
+// this page doesn't read searchParams/cookies/headers, so Next.js can serve
+// it straight from cache for repeat visits instead of re-running this route
+// as a Netlify serverless function every time. Eric: cut function-invocation
+// usage after the site's traffic blew past Netlify's free-plan function
+// limit and paused every project on the team.
+export const revalidate = 60;
+
 export const metadata = { title: 'Admissions' };
 
 export default async function AdmissionsPage() {
   const [{ courses }, { settings }] = await Promise.all([
-    safeFetch('/api/courses', { courses: [] }),
-    safeFetch('/api/settings', { settings: {} }),
+    safeFetch('/api/courses', { courses: [] }, { revalidate: 60 }),
+    safeFetch('/api/settings', { settings: {} }, { revalidate: 60 }),
   ]);
   // Eric: "one of the contacts is whatsapp contact... separate them" —
   // Settings.phone and Settings.whatsapp are genuinely different numbers

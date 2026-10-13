@@ -19,14 +19,22 @@ import Counter from '@/components/motion/Counter';
 // reason as the shop page (see app/page.js) — bypasses the root layout's
 // "%s | <school name>" title template so the tab reads exactly this, not
 // doubled up.
+// Statically cached and regenerated at most once every 60 seconds (ISR) —
+// this page doesn't read searchParams/cookies/headers, so Next.js can serve
+// it straight from cache for repeat visits instead of re-running this route
+// as a Netlify serverless function every time. Eric: cut function-invocation
+// usage after the site's traffic blew past Netlify's free-plan function
+// limit and paused every project on the team.
+export const revalidate = 60;
+
 export const metadata = { title: { absolute: 'Rolen School of Fashion and Design' } };
 
 export default async function SchoolPage() {
   const [coursesData, testimonialsData, galleryData, settingsData] = await Promise.all([
-    safeFetch('/api/courses', { courses: [] }),
-    safeFetch('/api/testimonials', { testimonials: [] }),
-    safeFetch('/api/gallery', { items: [] }),
-    safeFetch('/api/settings', { settings: {} }),
+    safeFetch('/api/courses', { courses: [] }, { revalidate: 60 }),
+    safeFetch('/api/testimonials', { testimonials: [] }, { revalidate: 60 }),
+    safeFetch('/api/gallery', { items: [] }, { revalidate: 60 }),
+    safeFetch('/api/settings', { settings: {} }, { revalidate: 60 }),
   ]);
 
   const courses = (coursesData.courses || []).slice(0, 3);

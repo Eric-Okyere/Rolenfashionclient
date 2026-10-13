@@ -3,10 +3,18 @@ import { safeFetch } from '@/lib/api';
 import Reveal from '@/components/motion/Reveal';
 import { StaggerGroup, StaggerItem } from '@/components/motion/Stagger';
 
+// Statically cached and regenerated at most once every 60 seconds (ISR) —
+// this page doesn't read searchParams/cookies/headers, so Next.js can serve
+// it straight from cache for repeat visits instead of re-running this route
+// as a Netlify serverless function every time. Eric: cut function-invocation
+// usage after the site's traffic blew past Netlify's free-plan function
+// limit and paused every project on the team.
+export const revalidate = 60;
+
 export const metadata = { title: 'About Us' };
 
 export default async function AboutPage() {
-  const { settings } = await safeFetch('/api/settings', { settings: {} });
+  const { settings } = await safeFetch('/api/settings', { settings: {} }, { revalidate: 60 });
 
   return (
     <div className="container-page py-16 max-w-4xl">

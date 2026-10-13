@@ -5,10 +5,18 @@ import Reveal from '@/components/motion/Reveal';
 import PhoneIcon from '@/components/icons/PhoneIcon';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
 
+// Statically cached and regenerated at most once every 60 seconds (ISR) —
+// this page doesn't read searchParams/cookies/headers, so Next.js can serve
+// it straight from cache for repeat visits instead of re-running this route
+// as a Netlify serverless function every time. Eric: cut function-invocation
+// usage after the site's traffic blew past Netlify's free-plan function
+// limit and paused every project on the team.
+export const revalidate = 60;
+
 export const metadata = { title: 'Contact & Location' };
 
 export default async function ContactPage() {
-  const { settings } = await safeFetch('/api/settings', { settings: {} });
+  const { settings } = await safeFetch('/api/settings', { settings: {} }, { revalidate: 60 });
 
   return (
     <div className="container-page py-16">
