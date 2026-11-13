@@ -80,8 +80,17 @@ export default function Footer({ settings }) {
         </div>
       </div>
 
-      <div className="border-t border-cream/10 py-5 text-center text-xs text-cream/50">
-        © {new Date().getFullYear()} {settings?.schoolName || 'Rolen School of Fashion and Design'}. All rights reserved.
+      <div className="border-t border-cream/10 py-5 text-center text-xs text-cream/50 flex flex-col sm:flex-row items-center justify-center gap-2 sm:gap-4">
+        <span>
+          © {new Date().getFullYear()} {settings?.schoolName || 'Rolen School of Fashion and Design'}. All rights reserved.
+        </span>
+        {/* Eric: "Add the admin login as a button so I can click it and login" —
+            a small, low-key link in the footer bar rather than the main nav,
+            since visitors never need it but Eric still wants one click to
+            /admin/login instead of typing the URL. */}
+        <Link href="/admin/login" className="text-cream/40 hover:text-gold-light underline-offset-2 hover:underline">
+          Admin Login
+        </Link>
       </div>
     </footer>
   );
