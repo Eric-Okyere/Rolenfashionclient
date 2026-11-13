@@ -7,7 +7,7 @@ import MediaCover from '@/components/MediaCover';
 
 // Same 5 brand lines used on the Gallery form — a slide's CTA can point at
 // one of them, or at "None" for a general "shop everything" slide.
-const categories = ['Rolen Kente', 'Rolen Bridals', 'Rolen Custom', 'Rolen Ready-to-Wear', 'Rolen Bespoke'];
+const categories = ['Rolen Kente', 'Rolen Bridals', 'Rolen Custom', 'Rolen Ready-to-Wear', 'Rolen Bespoke', 'Lace', 'Custom', 'Wedding Gowns'];
 
 const emptyForm = { title: '', caption: '', linkCategory: '', ctaLabel: 'Shop Now', order: 0, isActive: true };
 

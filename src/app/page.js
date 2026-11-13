@@ -66,6 +66,18 @@ const CATEGORIES = [
     blurb: 'One-of-one, simply elegance.',
     tags: ['Tailored Couture Gowns & Suits', 'Premium Fittings'],
   },
+  {
+    key: 'Lace',
+    blurb: 'Fine lace, finished with simply elegance.',
+  },
+  {
+    key: 'Custom',
+    blurb: 'Made to your own specifications, simply elegance.',
+  },
+  {
+    key: 'Wedding Gowns',
+    blurb: 'Your big day, simply elegance.',
+  },
 ];
 
 const FILTER_CHIPS = ['All', ...CATEGORIES.map((c) => c.key), 'Other'];
@@ -380,8 +392,11 @@ export default async function ShopPage({ searchParams }) {
         <Reveal as="p" className="uppercase tracking-[0.2em] text-xs text-gold-dark mb-3">
           The Collection
         </Reveal>
-        <Reveal as="h2" delay={0.05} className="font-display text-3xl mb-10">
+        <Reveal as="h2" delay={0.05} className="font-display text-3xl mb-4">
           {category ? category : 'All Products'}
+        </Reveal>
+        <Reveal as="p" delay={0.08} className="text-sm text-ink/60 mb-10">
+          Pre-order pieces take 3 working days to prepare after a 70% deposit is paid.
         </Reveal>
 
         <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
