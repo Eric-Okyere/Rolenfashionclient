@@ -17,6 +17,18 @@ import MediaCover from '@/components/MediaCover';
 // admin-set flag, so it's always accurate — rather than here, since calling
 // Date.now() during a client component's render is treated as an impure,
 // unstable read by this project's lint rules.
+// Eric: "All products except ready categories must be pre-order." Only the
+// Ready-to-Wear line is in stock to buy as-is; every other line (Kente,
+// Bridals, Custom, Bespoke, Lace, Wedding Gowns, …) is made to order. Derived
+// from the category itself rather than a stored flag, so every existing and
+// future product is labelled correctly with no data migration. The legacy
+// 'Ready-to-Wear' value is kept for products saved under the old taxonomy.
+const READY_CATEGORIES = ['Rolen Ready-to-Wear', 'Ready-to-Wear'];
+
+export function isPreOrderCategory(category) {
+  return !READY_CATEGORIES.includes(category);
+}
+
 export default function GalleryItem({ item, whatsapp, isNew = false }) {
   const [open, setOpen] = useState(false);
   const [mediaIndex, setMediaIndex] = useState(0);
@@ -49,7 +61,12 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
   const hasMultipleMedia = mediaItems.length > 1;
   const currentMedia = mediaItems[mediaIndex];
   const orderNumber = splitNumbers(whatsapp)[0];
-  const orderMessage = `Hi Rolen! I'd like to order: ${item.title}${item.price ? ` (GH¢ ${Number(item.price).toLocaleString()})` : ''}.`;
+  // Only labelled where the piece is actually being sold (the Shop passes
+  // `whatsapp`); the School page's plain photo strip omits it and shows no
+  // pre-order badge, since nothing is for sale there.
+  const isPreOrder = Boolean(whatsapp) && isPreOrderCategory(item.category);
+  const orderVerb = isPreOrder ? 'pre-order' : 'order';
+  const orderMessage = `Hi Rolen! I'd like to ${orderVerb}: ${item.title}${item.price ? ` (GH¢ ${Number(item.price).toLocaleString()})` : ''}.`;
 
   // Eric: "Students must pay their fees through Momo on 0209317581", then
   // asked for a way to enter a phone number and have the money deducted
@@ -146,6 +163,11 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
         )}
         {isNew && (
           <span className="absolute top-2 left-2 bg-gold text-ink text-[10px] font-semibold px-2 py-0.5 rounded-full">NEW</span>
+        )}
+        {isPreOrder && (
+          <span className="absolute bottom-2 left-2 bg-ink/85 text-gold-light text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full">
+            PRE-ORDER
+          </span>
         )}
         {photos.length > 1 && (
           <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">1/{photos.length}</span>
@@ -260,6 +282,11 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
               <div className="text-cream mt-3 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="font-medium">{item.title}</p>
+                  {isPreOrder && (
+                    <p className="text-xs text-gold-light mt-0.5">
+                      Pre-order — ready 3 working days after a 70% deposit is paid.
+                    </p>
+                  )}
                   {item.description && <p className="text-sm text-cream/70 max-w-md">{item.description}</p>}
                 </div>
                 <div className="flex items-center flex-wrap gap-3">
@@ -273,7 +300,7 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
                       onClick={(e) => { e.stopPropagation(); setShowPayForm((v) => !v); }}
                       className="inline-flex items-center gap-1.5 bg-gold text-ink text-xs font-semibold px-3.5 py-2 rounded-full hover:brightness-105 transition-[filter] whitespace-nowrap"
                     >
-                      💳 Pay with MoMo
+                      {isPreOrder ? '💳 Pre-order with MoMo' : '💳 Pay with MoMo'}
                     </button>
                   )}
                   {orderNumber && (
@@ -285,7 +312,7 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
                       className="inline-flex items-center gap-1.5 bg-[#25D366] text-white text-xs font-semibold px-3.5 py-2 rounded-full hover:brightness-105 transition-[filter] whitespace-nowrap"
                     >
                       <WhatsAppIcon className="w-3.5 h-3.5" />
-                      Order via WhatsApp
+                      {isPreOrder ? 'Pre-order via WhatsApp' : 'Order via WhatsApp'}
                     </a>
                   )}
                 </div>
@@ -298,7 +325,7 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
                   className="mt-3 bg-cream/5 border border-cream/15 rounded-lg p-4 space-y-3"
                 >
                   <p className="text-cream text-sm font-medium">
-                    Pay GH¢ {Number(item.price).toLocaleString()} for {item.title}
+                    {isPreOrder ? 'Pre-order: pay' : 'Pay'} GH¢ {Number(item.price).toLocaleString()} for {item.title}
                   </p>
                   <p className="text-cream/60 text-xs">
                     You&apos;ll enter your Mobile Money number and approve the payment on your own phone next.
