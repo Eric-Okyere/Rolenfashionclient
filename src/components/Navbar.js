@@ -111,7 +111,7 @@ export default function Navbar({ settings }) {
           </motion.span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-7 shrink-0">
+        <div className="hidden lg:flex items-center gap-4 xl:gap-7 shrink-0">
           {visibleLinks.map((l) => (
             <Link
               key={l.href}
@@ -126,10 +126,16 @@ export default function Navbar({ settings }) {
           <Link href="/admissions" className="btn-gold text-sm">
             Apply Now
           </Link>
+          {/* Eric: "Add the admin login as a button to the frontend" — a
+              visible outline button beside Apply Now, so staff can reach
+              /admin/login in one click from any page. */}
+          <Link href="/admin/login" className="btn-outline text-sm px-4! py-2!">
+            Admin Login
+          </Link>
         </div>
 
         <motion.button
-          className="md:hidden p-2 rounded-md border border-black/10 shrink-0"
+          className="lg:hidden p-2 rounded-md border border-black/10 shrink-0"
           onClick={() => setOpen((o) => !o)}
           aria-label="Toggle menu"
           aria-expanded={open}
@@ -161,7 +167,7 @@ export default function Navbar({ settings }) {
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-            className="md:hidden border-t border-black/5 bg-cream overflow-hidden"
+            className="lg:hidden border-t border-black/5 bg-cream overflow-hidden"
           >
             <div className="container-page py-3 flex flex-col gap-3">
               {visibleLinks.map((l) => (
@@ -169,9 +175,14 @@ export default function Navbar({ settings }) {
                   {l.label}
                 </Link>
               ))}
-              <Link href="/admissions" onClick={() => setOpen(false)} className="btn-gold text-sm w-fit">
-                Apply Now
-              </Link>
+              <div className="flex flex-wrap gap-3">
+                <Link href="/admissions" onClick={() => setOpen(false)} className="btn-gold text-sm w-fit">
+                  Apply Now
+                </Link>
+                <Link href="/admin/login" onClick={() => setOpen(false)} className="btn-outline text-sm w-fit">
+                  Admin Login
+                </Link>
+              </div>
             </div>
           </motion.div>
         )}
