@@ -60,7 +60,9 @@ export default function Navbar({ settings }) {
   // Contact) is School-side. The displayed name next to the logo, and
   // which nav links show at all (see `links`'s `schoolOnly` above), both
   // key off this same section split.
-  const isSchoolSection = pathname !== '/';
+  // Product pages (/shop/<id>, linked from WhatsApp order messages) are
+  // part of the Shop too, so they keep the Shop name and link set.
+  const isSchoolSection = pathname !== '/' && !pathname.startsWith('/shop');
   const displayName = isSchoolSection ? settings?.schoolName || SCHOOL_NAME_FALLBACK : SHOP_NAME;
   const visibleLinks = links.filter((l) => !l.schoolOnly || isSchoolSection);
 

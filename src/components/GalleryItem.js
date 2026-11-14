@@ -42,7 +42,25 @@ export function payableAmount(item) {
   return null;
 }
 
-export default function GalleryItem({ item, whatsapp, isNew = false }) {
+// Eric: "Dress name and description, picture must show in the whatsapp
+// message so admin can click and lead to the page." WhatsApp can't attach a
+// photo to a pre-filled message, but it does show a picture preview for any
+// link in the message — so every product now has its own page (/shop/<id>,
+// whose link preview carries the product photo, name and description), and
+// the order message includes that link. Built from the site's configured
+// public URL rather than window.location so the message is identical on the
+// server and in the browser (the product page renders this on the server).
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://rolengh.com').replace(/\/$/, '');
+
+export function productPageUrl(item) {
+  return `${SITE_URL}/shop/${item._id}`;
+}
+
+// `inline` renders the product viewer (photos/video, details, order and
+// MoMo buttons) directly on the page instead of as a card that opens a
+// pop-up — used by the product page so it shares exactly the same buttons
+// and payment logic as the Shop's pop-up.
+export default function GalleryItem({ item, whatsapp, isNew = false, inline = false }) {
   const [open, setOpen] = useState(false);
   const [mediaIndex, setMediaIndex] = useState(0);
   // Eric shared a second reference video: hovering a product photo magnifies
@@ -80,7 +98,15 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
   const isPreOrder = Boolean(whatsapp) && isPreOrderCategory(item.category);
   const orderVerb = isPreOrder ? 'pre-order' : 'order';
   const payAmount = payableAmount(item);
-  const orderMessage = `Hi Rolen! I'd like to ${orderVerb}: ${item.title}${item.price ? ` (GH¢ ${Number(item.price).toLocaleString()})` : ''}.`;
+  const shortDescription =
+    item.description && item.description.length > 300 ? `${item.description.slice(0, 297).trimEnd()}…` : item.description;
+  const orderMessage = [
+    `Hi Rolen! I'd like to ${orderVerb}: ${item.title}${item.price ? ` (GH¢ ${Number(item.price).toLocaleString()})` : ''}.`,
+    shortDescription,
+    productPageUrl(item),
+  ]
+    .filter(Boolean)
+    .join('\n\n');
 
   // Eric: "Students must pay their fees through Momo on 0209317581", then
   // asked for a way to enter a phone number and have the money deducted
@@ -150,62 +176,8 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
     fetch(`${API_URL}/api/gallery/${item._id}/order-click`, { method: 'POST' }).catch(() => {});
   }
 
-  return (
+  const panel = (
     <>
-      <button
-        onClick={openLightbox}
-        className="card overflow-hidden group relative aspect-square block w-full text-left transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl motion-reduce:hover:translate-y-0"
-      >
-        {/* Eric: "work on all the cards and show the full picture in the
-            cards" — a plain object-cover fill was cropping tall/portrait
-            product photos to fit this square card, the same issue already
-            fixed for the carousel. MediaCover shows the whole photo
-            uncropped, with a blurred fill behind it so the square never has
-            plain empty bars. The hover zoom now scales the whole card
-            (photo + backdrop together) instead of just an inner <img>. */}
-        <MediaCover
-          src={mediaUrl(item.imageUrl)}
-          alt={item.title}
-          className="w-full h-full group-hover:scale-105 transition-transform duration-300"
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-          <p className="text-white text-sm font-medium">{item.title}</p>
-          {item.price && <p className="text-gold-light text-xs">GH¢ {Number(item.price).toLocaleString()}</p>}
-        </div>
-        {hasVideo && (
-          <span className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">▶ Video</span>
-        )}
-        {isNew && (
-          <span className="absolute top-2 left-2 bg-gold text-ink text-[10px] font-semibold px-2 py-0.5 rounded-full">NEW</span>
-        )}
-        {isPreOrder && (
-          <span className="absolute bottom-2 left-2 bg-ink/85 text-gold-light text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full">
-            PRE-ORDER
-          </span>
-        )}
-        {photos.length > 1 && (
-          <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">1/{photos.length}</span>
-        )}
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-[100] bg-black/85 flex items-center justify-center p-4 overflow-y-auto"
-            onClick={() => setOpen(false)}
-          >
-            <motion.div
-              initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.96 }}
-              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-              className="max-w-3xl w-full"
-              onClick={(e) => e.stopPropagation()}
-            >
               <div className="relative">
                 {currentMedia.type === 'video' ? (
                   <video
@@ -371,9 +343,79 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
                 </form>
               )}
 
-              <button onClick={() => setOpen(false)} className="mt-3 text-cream/70 text-sm underline">
-                Close
-              </button>
+    </>
+  );
+
+  if (inline) {
+    return <div className="bg-ink rounded-2xl p-4 md:p-6">{panel}</div>;
+  }
+
+  return (
+    <>
+      <button
+        onClick={openLightbox}
+        className="card overflow-hidden group relative aspect-square block w-full text-left transition-all duration-300 hover:-translate-y-1.5 hover:shadow-xl motion-reduce:hover:translate-y-0"
+      >
+        {/* Eric: "work on all the cards and show the full picture in the
+            cards" — a plain object-cover fill was cropping tall/portrait
+            product photos to fit this square card, the same issue already
+            fixed for the carousel. MediaCover shows the whole photo
+            uncropped, with a blurred fill behind it so the square never has
+            plain empty bars. The hover zoom now scales the whole card
+            (photo + backdrop together) instead of just an inner <img>. */}
+        <MediaCover
+          src={mediaUrl(item.imageUrl)}
+          alt={item.title}
+          className="w-full h-full group-hover:scale-105 transition-transform duration-300"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
+          <p className="text-white text-sm font-medium">{item.title}</p>
+          {item.price && <p className="text-gold-light text-xs">GH¢ {Number(item.price).toLocaleString()}</p>}
+        </div>
+        {hasVideo && (
+          <span className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">▶ Video</span>
+        )}
+        {isNew && (
+          <span className="absolute top-2 left-2 bg-gold text-ink text-[10px] font-semibold px-2 py-0.5 rounded-full">NEW</span>
+        )}
+        {isPreOrder && (
+          <span className="absolute bottom-2 left-2 bg-ink/85 text-gold-light text-[10px] font-semibold tracking-wide px-2 py-0.5 rounded-full">
+            PRE-ORDER
+          </span>
+        )}
+        {photos.length > 1 && (
+          <span className="absolute bottom-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">1/{photos.length}</span>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {open && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+            className="fixed inset-0 z-[100] bg-black/85 flex items-center justify-center p-4 overflow-y-auto"
+            onClick={() => setOpen(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
+              className="max-w-3xl w-full"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {panel}
+
+              <div className="mt-3 flex items-center gap-4 text-sm">
+                <button onClick={() => setOpen(false)} className="text-cream/70 underline">
+                  Close
+                </button>
+                <a href={`/shop/${item._id}`} onClick={(e) => e.stopPropagation()} className="text-gold-light underline">
+                  Open product page
+                </a>
+              </div>
             </motion.div>
           </motion.div>
         )}
