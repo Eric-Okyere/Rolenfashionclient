@@ -26,7 +26,7 @@ const links = [
 ];
 
 const FALLBACK_LOGO = '/images/rolen-logo.png';
-const SHOP_NAME = 'Rolen Fashion and Design';
+const SHOP_NAME = 'Rolen Garments';
 const SCHOOL_NAME_FALLBACK = 'Rolen School of Fashion and Design';
 
 export default function Navbar({ settings }) {
