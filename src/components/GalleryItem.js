@@ -29,6 +29,19 @@ export function isPreOrderCategory(category) {
   return !READY_CATEGORIES.includes(category);
 }
 
+// Eric: "Allow MoMo pay for pre-order. They have to pay some amount. It
+// varies but ready to wear price is fixed." Ready-to-Wear pays its full
+// price; pre-order pays a deposit — the product's own `depositAmount` if an
+// admin set one, otherwise 70% of the price (the rule already stated on the
+// Shop page). Mirrors the server's utils/preorder.js, which is what actually
+// decides the charge; this copy only decides what the button shows.
+export function payableAmount(item) {
+  if (!isPreOrderCategory(item.category)) return item.price || null;
+  if (item.depositAmount) return Number(item.depositAmount);
+  if (item.price) return Math.round(Number(item.price) * 0.7);
+  return null;
+}
+
 export default function GalleryItem({ item, whatsapp, isNew = false }) {
   const [open, setOpen] = useState(false);
   const [mediaIndex, setMediaIndex] = useState(0);
@@ -66,6 +79,7 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
   // pre-order badge, since nothing is for sale there.
   const isPreOrder = Boolean(whatsapp) && isPreOrderCategory(item.category);
   const orderVerb = isPreOrder ? 'pre-order' : 'order';
+  const payAmount = payableAmount(item);
   const orderMessage = `Hi Rolen! I'd like to ${orderVerb}: ${item.title}${item.price ? ` (GH¢ ${Number(item.price).toLocaleString()})` : ''}.`;
 
   // Eric: "Students must pay their fees through Momo on 0209317581", then
@@ -284,17 +298,20 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
                   <p className="font-medium">{item.title}</p>
                   {isPreOrder && (
                     <p className="text-xs text-gold-light mt-0.5">
-                      Pre-order — ready 3 working days after a 70% deposit is paid.
+                      Pre-order — ready 3 working days after the deposit is paid.
                     </p>
                   )}
                   {item.description && <p className="text-sm text-cream/70 max-w-md">{item.description}</p>}
                 </div>
                 <div className="flex items-center flex-wrap gap-3">
                   {item.price && <p className="text-gold-light font-semibold whitespace-nowrap">GH¢ {Number(item.price).toLocaleString()}</p>}
-                  {/* Only offered when the product has a published price —
-                      there's nothing to charge otherwise, so this button
-                      never appears next to a "contact for pricing" item. */}
-                  {item.price && (
+                  {/* Only offered when there's something to charge: the price
+                      (Ready-to-Wear) or a deposit (pre-order — set per
+                      product, or 70% of the price). */}
+                  {isPreOrder && payAmount && (
+                    <p className="text-cream/80 text-xs whitespace-nowrap">Deposit: GH¢ {payAmount.toLocaleString()}</p>
+                  )}
+                  {payAmount && (
                     <button
                       type="button"
                       onClick={(e) => { e.stopPropagation(); setShowPayForm((v) => !v); }}
@@ -318,14 +335,16 @@ export default function GalleryItem({ item, whatsapp, isNew = false }) {
                 </div>
               </div>
 
-              {showPayForm && item.price && (
+              {showPayForm && payAmount && (
                 <form
                   onSubmit={payWithMomo}
                   onClick={(e) => e.stopPropagation()}
                   className="mt-3 bg-cream/5 border border-cream/15 rounded-lg p-4 space-y-3"
                 >
                   <p className="text-cream text-sm font-medium">
-                    {isPreOrder ? 'Pre-order: pay' : 'Pay'} GH¢ {Number(item.price).toLocaleString()} for {item.title}
+                    {isPreOrder
+                      ? `Pre-order deposit: pay GH¢ ${payAmount.toLocaleString()} for ${item.title}`
+                      : `Pay GH¢ ${payAmount.toLocaleString()} for ${item.title}`}
                   </p>
                   <p className="text-cream/60 text-xs">
                     You&apos;ll enter your Mobile Money number and approve the payment on your own phone next.

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { apiFetch, mediaUrl } from '@/lib/api';
 import { resizeImageFile } from '@/lib/imageResize';
 import MediaCover from '@/components/MediaCover';
+import { isPreOrderCategory } from '@/components/GalleryItem';
 
 // The shop's current brand-line structure. Older values (Nuptials, Kente,
 // Exclusives, Melange by Rolen, Ready-to-Wear, Bridal, etc.) still work for
@@ -14,7 +15,7 @@ const categories = ['Rolen Kente', 'Rolen Bridals', 'Rolen Custom', 'Rolen Ready
 
 export default function AdminGalleryPage() {
   const [items, setItems] = useState([]);
-  const [form, setForm] = useState({ title: '', description: '', category: 'Other', price: '', isFeatured: false });
+  const [form, setForm] = useState({ title: '', description: '', category: 'Other', price: '', depositAmount: '', isFeatured: false });
   const [imageFiles, setImageFiles] = useState([]);
   const [videoFile, setVideoFile] = useState(null);
   const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
@@ -32,7 +33,7 @@ export default function AdminGalleryPage() {
   // Post form's own state above, so editing one product can never clobber
   // whatever's half-typed into the "Post a Product" form.
   const [editingItem, setEditingItem] = useState(null); // the full item object, or null when the modal is closed
-  const [editForm, setEditForm] = useState({ title: '', description: '', category: 'Other', price: '', isFeatured: false });
+  const [editForm, setEditForm] = useState({ title: '', description: '', category: 'Other', price: '', depositAmount: '', isFeatured: false });
   const [editImageFiles, setEditImageFiles] = useState([]); // empty = keep existing photos
   const [editVideoFile, setEditVideoFile] = useState(null); // null = keep existing video
   const [editImagePreviewUrls, setEditImagePreviewUrls] = useState([]);
@@ -123,7 +124,7 @@ export default function AdminGalleryPage() {
       if (videoFile) fd.append('video', videoFile);
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
       await apiFetch('/api/gallery', { method: 'POST', body: fd });
-      setForm({ title: '', description: '', category: 'Other', price: '', isFeatured: false });
+      setForm({ title: '', description: '', category: 'Other', price: '', depositAmount: '', isFeatured: false });
       setImageFiles([]);
       setVideoFile(null);
       e.target.reset();
@@ -154,6 +155,7 @@ export default function AdminGalleryPage() {
       description: item.description || '',
       category: item.category || 'Other',
       price: item.price ?? '',
+      depositAmount: item.depositAmount ?? '',
       isFeatured: !!item.isFeatured,
     });
     setEditImageFiles([]);
@@ -239,6 +241,9 @@ export default function AdminGalleryPage() {
             <span className="block mb-1 font-medium">Price (GH¢, optional — for items sold)</span>
             <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
           </label>
+          {isPreOrderCategory(form.category) && (
+            <DepositField value={form.depositAmount} price={form.price} onChange={(v) => setForm({ ...form, depositAmount: v })} />
+          )}
           <label className="text-sm flex items-center gap-2 mt-6">
             <input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} />
             Feature on homepage
@@ -350,6 +355,9 @@ export default function AdminGalleryPage() {
                 <span className="block mb-1 font-medium">Price (GH¢, optional — for items sold)</span>
                 <input type="number" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
               </label>
+              {isPreOrderCategory(editForm.category) && (
+                <DepositField value={editForm.depositAmount} price={editForm.price} onChange={(v) => setEditForm({ ...editForm, depositAmount: v })} />
+              )}
               <label className="text-sm flex items-center gap-2 mt-6">
                 <input type="checkbox" checked={editForm.isFeatured} onChange={(e) => setEditForm({ ...editForm, isFeatured: e.target.checked })} />
                 Feature on homepage
@@ -406,5 +414,27 @@ export default function AdminGalleryPage() {
         </div>
       )}
     </div>
+  );
+}
+
+// Pre-order products only: the deposit a shopper pays online via MoMo. It
+// varies per product, so it's set here; left blank, 70% of the price is
+// charged (the rule already stated on the Shop page). Ready-to-Wear has no
+// deposit — its fixed price is charged in full.
+function DepositField({ value, price, onChange }) {
+  const fallback = price ? Math.round(Number(price) * 0.7) : null;
+  return (
+    <label className="text-sm block">
+      <span className="block mb-1 font-medium">Pre-order deposit (GH¢)</span>
+      <input
+        type="number"
+        min="0"
+        value={value}
+        placeholder={fallback ? `Blank = 70% (GH¢ ${fallback.toLocaleString()})` : 'Blank = 70% of the price'}
+        onChange={(e) => onChange(e.target.value)}
+        className="w-full rounded-lg border border-black/15 p-2.5"
+      />
+      <span className="block mt-1 text-xs text-muted">What the customer pays via MoMo to place this pre-order.</span>
+    </label>
   );
 }

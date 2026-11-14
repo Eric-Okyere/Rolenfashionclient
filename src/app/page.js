@@ -396,7 +396,7 @@ export default async function ShopPage({ searchParams }) {
           {category ? category : 'All Products'}
         </Reveal>
         <Reveal as="p" delay={0.08} className="text-sm text-ink/60 mb-10">
-          Pre-order pieces take 3 working days to prepare after a 70% deposit is paid.
+          Pre-order pieces take 3 working days to prepare after the deposit is paid.
         </Reveal>
 
         <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
