@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { apiFetch, mediaUrl } from '@/lib/api';
 import { resizeImageFile } from '@/lib/imageResize';
 import MediaCover from '@/components/MediaCover';
-import { isPreOrderCategory } from '@/components/GalleryItem';
+import { isPreOrderCategory, productNames } from '@/lib/product';
 
 // The shop's current brand-line structure. Older values (Nuptials, Kente,
 // Exclusives, Melange by Rolen, Ready-to-Wear, Bridal, etc.) still work for
@@ -15,7 +15,7 @@ const categories = ['Rolen Kente', 'Rolen Bridals', 'Rolen Custom', 'Rolen Ready
 
 export default function AdminGalleryPage() {
   const [items, setItems] = useState([]);
-  const [form, setForm] = useState({ title: '', description: '', category: 'Other', price: '', depositAmount: '', isFeatured: false });
+  const [form, setForm] = useState({ name: '', title: '', description: '', category: 'Other', price: '', depositAmount: '', isFeatured: false });
   const [imageFiles, setImageFiles] = useState([]);
   const [videoFile, setVideoFile] = useState(null);
   const [imagePreviewUrls, setImagePreviewUrls] = useState([]);
@@ -33,7 +33,7 @@ export default function AdminGalleryPage() {
   // Post form's own state above, so editing one product can never clobber
   // whatever's half-typed into the "Post a Product" form.
   const [editingItem, setEditingItem] = useState(null); // the full item object, or null when the modal is closed
-  const [editForm, setEditForm] = useState({ title: '', description: '', category: 'Other', price: '', depositAmount: '', isFeatured: false });
+  const [editForm, setEditForm] = useState({ name: '', title: '', description: '', category: 'Other', price: '', depositAmount: '', isFeatured: false });
   const [editImageFiles, setEditImageFiles] = useState([]); // empty = keep existing photos
   const [editVideoFile, setEditVideoFile] = useState(null); // null = keep existing video
   const [editImagePreviewUrls, setEditImagePreviewUrls] = useState([]);
@@ -124,7 +124,7 @@ export default function AdminGalleryPage() {
       if (videoFile) fd.append('video', videoFile);
       Object.entries(form).forEach(([k, v]) => fd.append(k, v));
       await apiFetch('/api/gallery', { method: 'POST', body: fd });
-      setForm({ title: '', description: '', category: 'Other', price: '', depositAmount: '', isFeatured: false });
+      setForm({ name: '', title: '', description: '', category: 'Other', price: '', depositAmount: '', isFeatured: false });
       setImageFiles([]);
       setVideoFile(null);
       e.target.reset();
@@ -150,8 +150,13 @@ export default function AdminGalleryPage() {
   // --- Edit modal: opened per-product by the "Edit" button below ---
   function startEdit(item) {
     setEditingItem(item);
+    // Pre-fills Name/Title from a title like "Aba Dress. Navy Corset …" for
+    // products posted before the Name field existed, so saving stores them
+    // separately.
+    const split = productNames(item);
     setEditForm({
-      title: item.title || '',
+      name: item.name || (split.subtitle ? split.name : ''),
+      title: item.name ? item.title || '' : split.subtitle || item.title || '',
       description: item.description || '',
       category: item.category || 'Other',
       price: item.price ?? '',
@@ -228,8 +233,12 @@ export default function AdminGalleryPage() {
         {error && <div className="rounded-lg bg-red-50 text-red-700 text-sm p-3">{error}</div>}
         <div className="grid md:grid-cols-2 gap-4">
           <label className="text-sm block">
-            <span className="block mb-1 font-medium">Title</span>
-            <input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
+            <span className="block mb-1 font-medium">Product Name</span>
+            <input value={form.name} placeholder="e.g. Aba Dress" onChange={(e) => setForm({ ...form, name: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
+          </label>
+          <label className="text-sm block">
+            <span className="block mb-1 font-medium">Title (style description)</span>
+            <input required value={form.title} placeholder="e.g. Navy Corset Maxi Dress with African Print Sleeves" onChange={(e) => setForm({ ...form, title: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
           </label>
           <label className="text-sm block">
             <span className="block mb-1 font-medium">Category</span>
@@ -314,7 +323,8 @@ export default function AdminGalleryPage() {
               )}
             </div>
             <div className="p-3">
-              <p className="text-sm font-medium truncate">{item.title}</p>
+              <p className="text-sm font-medium truncate">{productNames(item).name}</p>
+              {productNames(item).subtitle && <p className="text-xs text-ink/70 truncate">{productNames(item).subtitle}</p>}
               <p className="text-xs text-muted">{item.category}{item.price ? ` · GH¢ ${item.price}` : ''}</p>
               <div className="flex justify-between mt-2 text-xs">
                 <button onClick={() => togglePublish(item)} className="text-gold-dark hover:underline">
@@ -342,7 +352,11 @@ export default function AdminGalleryPage() {
             {editError && <div className="rounded-lg bg-red-50 text-red-700 text-sm p-3">{editError}</div>}
             <div className="grid md:grid-cols-2 gap-4">
               <label className="text-sm block">
-                <span className="block mb-1 font-medium">Title</span>
+                <span className="block mb-1 font-medium">Product Name</span>
+                <input value={editForm.name} placeholder="e.g. Aba Dress" onChange={(e) => setEditForm({ ...editForm, name: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
+              </label>
+              <label className="text-sm block">
+                <span className="block mb-1 font-medium">Title (style description)</span>
                 <input required value={editForm.title} onChange={(e) => setEditForm({ ...editForm, title: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
               </label>
               <label className="text-sm block">

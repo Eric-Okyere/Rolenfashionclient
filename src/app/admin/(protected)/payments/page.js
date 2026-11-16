@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { apiFetch } from '@/lib/api';
+import { productNames } from '@/lib/product';
 
 // Eric: "Students must pay their fees through Momo on 0209317581", then
 // asked for students/shoppers to be able to enter their phone number and
@@ -85,7 +86,7 @@ export default function AdminPaymentsPage() {
                       ? p.application
                         ? `${p.application.firstName} ${p.application.lastName} (${p.application.applicationNumber})`
                         : '—'
-                      : p.galleryItem?.title || '—'}
+                      : (p.galleryItem && productNames(p.galleryItem).name) || '—'}
                   </td>
                   <td className="p-3">
                     <div>{p.name || '—'}</div>

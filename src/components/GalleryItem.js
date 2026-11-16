@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { isPreOrderCategory, payableAmount, productNames, productPageUrl } from '@/lib/product';
 import { mediaUrl, API_URL, apiFetch } from '@/lib/api';
 import { splitNumbers, waHref } from '@/lib/phone';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
@@ -17,45 +18,6 @@ import MediaCover from '@/components/MediaCover';
 // admin-set flag, so it's always accurate — rather than here, since calling
 // Date.now() during a client component's render is treated as an impure,
 // unstable read by this project's lint rules.
-// Eric: "All products except ready categories must be pre-order." Only the
-// Ready-to-Wear line is in stock to buy as-is; every other line (Kente,
-// Bridals, Custom, Bespoke, Lace, Wedding Gowns, …) is made to order. Derived
-// from the category itself rather than a stored flag, so every existing and
-// future product is labelled correctly with no data migration. The legacy
-// 'Ready-to-Wear' value is kept for products saved under the old taxonomy.
-const READY_CATEGORIES = ['Rolen Ready-to-Wear', 'Ready-to-Wear'];
-
-export function isPreOrderCategory(category) {
-  return !READY_CATEGORIES.includes(category);
-}
-
-// Eric: "Allow MoMo pay for pre-order. They have to pay some amount. It
-// varies but ready to wear price is fixed." Ready-to-Wear pays its full
-// price; pre-order pays a deposit — the product's own `depositAmount` if an
-// admin set one, otherwise 70% of the price (the rule already stated on the
-// Shop page). Mirrors the server's utils/preorder.js, which is what actually
-// decides the charge; this copy only decides what the button shows.
-export function payableAmount(item) {
-  if (!isPreOrderCategory(item.category)) return item.price || null;
-  if (item.depositAmount) return Number(item.depositAmount);
-  if (item.price) return Math.round(Number(item.price) * 0.7);
-  return null;
-}
-
-// Eric: "Dress name and description, picture must show in the whatsapp
-// message so admin can click and lead to the page." WhatsApp can't attach a
-// photo to a pre-filled message, but it does show a picture preview for any
-// link in the message — so every product now has its own page (/shop/<id>,
-// whose link preview carries the product photo, name and description), and
-// the order message includes that link. Built from the site's configured
-// public URL rather than window.location so the message is identical on the
-// server and in the browser (the product page renders this on the server).
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://rolengh.com').replace(/\/$/, '');
-
-export function productPageUrl(item) {
-  return `${SITE_URL}/shop/${item._id}`;
-}
-
 // `inline` renders the product viewer (photos/video, details, order and
 // MoMo buttons) directly on the page instead of as a card that opens a
 // pop-up — used by the product page so it shares exactly the same buttons
@@ -97,11 +59,12 @@ export default function GalleryItem({ item, whatsapp, isNew = false, inline = fa
   // pre-order badge, since nothing is for sale there.
   const isPreOrder = Boolean(whatsapp) && isPreOrderCategory(item.category);
   const orderVerb = isPreOrder ? 'pre-order' : 'order';
+  const { name: productName, subtitle } = productNames(item);
   const payAmount = payableAmount(item);
   const shortDescription =
     item.description && item.description.length > 300 ? `${item.description.slice(0, 297).trimEnd()}…` : item.description;
   const orderMessage = [
-    `Hi Rolen! I'd like to ${orderVerb}: ${item.title}${item.price ? ` (GH¢ ${Number(item.price).toLocaleString()})` : ''}.`,
+    `Hi Rolen! I'd like to ${orderVerb}: ${productName}${subtitle ? ` — ${subtitle}` : ''}${item.price ? ` (GH¢ ${Number(item.price).toLocaleString()})` : ''}.`,
     shortDescription,
     productPageUrl(item),
   ]
@@ -199,7 +162,7 @@ export default function GalleryItem({ item, whatsapp, isNew = false, inline = fa
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img
                       src={mediaUrl(currentMedia.src)}
-                      alt={`${item.title}${hasMultipleMedia ? ` — ${mediaIndex + 1} of ${mediaItems.length}` : ''}`}
+                      alt={`${productName}${hasMultipleMedia ? ` — ${mediaIndex + 1} of ${mediaItems.length}` : ''}`}
                       style={isZoomed ? { transformOrigin: zoomOrigin } : undefined}
                       className={`w-full max-h-[70vh] object-contain rounded-lg transition-transform duration-150 ease-out ${
                         isZoomed ? 'scale-[2.2] cursor-zoom-out' : 'cursor-zoom-in'
@@ -267,7 +230,8 @@ export default function GalleryItem({ item, whatsapp, isNew = false, inline = fa
 
               <div className="text-cream mt-3 flex flex-wrap items-center justify-between gap-3">
                 <div>
-                  <p className="font-medium">{item.title}</p>
+                  <p className="font-display text-lg leading-tight">{productName}</p>
+                  {subtitle && <p className="text-cream/80 text-sm">{subtitle}</p>}
                   {isPreOrder && (
                     <p className="text-xs text-gold-light mt-0.5">
                       Pre-order — ready 3 working days after the deposit is paid.
@@ -315,8 +279,8 @@ export default function GalleryItem({ item, whatsapp, isNew = false, inline = fa
                 >
                   <p className="text-cream text-sm font-medium">
                     {isPreOrder
-                      ? `Pre-order deposit: pay GH¢ ${payAmount.toLocaleString()} for ${item.title}`
-                      : `Pay GH¢ ${payAmount.toLocaleString()} for ${item.title}`}
+                      ? `Pre-order deposit: pay GH¢ ${payAmount.toLocaleString()} for ${productName}`
+                      : `Pay GH¢ ${payAmount.toLocaleString()} for ${productName}`}
                   </p>
                   <p className="text-cream/60 text-xs">
                     You&apos;ll enter your Mobile Money number and approve the payment on your own phone next.
@@ -365,11 +329,12 @@ export default function GalleryItem({ item, whatsapp, isNew = false, inline = fa
             (photo + backdrop together) instead of just an inner <img>. */}
         <MediaCover
           src={mediaUrl(item.imageUrl)}
-          alt={item.title}
+          alt={productName}
           className="w-full h-full group-hover:scale-105 transition-transform duration-300"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
-          <p className="text-white text-sm font-medium">{item.title}</p>
+          <p className="text-white text-sm font-medium">{productName}</p>
+          {subtitle && <p className="text-white/80 text-xs line-clamp-1">{subtitle}</p>}
           {item.price && <p className="text-gold-light text-xs">GH¢ {Number(item.price).toLocaleString()}</p>}
         </div>
         {hasVideo && (
