@@ -11,7 +11,7 @@ import { isPreOrderCategory, productNames } from '@/lib/product';
 // any product already saved with one of them — they're just not offered
 // here any more since the shop now organizes around these five lines
 // instead (see Gallery.js for why the server enum still lists every set).
-const categories = ['Rolen Kente', 'Rolen Bridals', 'Rolen Custom', 'Rolen Ready-to-Wear', 'Rolen Bespoke', 'Lace', 'Custom', 'Wedding Gowns', 'Other'];
+const categories = ['Rolen Kente', 'Rolen Bridals', 'Rolen Ready-to-Wear', 'Rolen Bespoke', 'Lace', 'Wedding Gowns', 'Other'];
 
 export default function AdminGalleryPage() {
   const [items, setItems] = useState([]);

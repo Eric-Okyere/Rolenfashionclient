@@ -37,6 +37,10 @@ export const metadata = { title: { absolute: 'Rolen Fashion and Design' } };
 // sub-collections shown as small labels on the card (not yet a separate
 // filterable field — see the delivery note for why); `subBrands` is for
 // Ready-to-Wear's two named lines, each with their own tagline.
+// Eric: "Remove rolen custom and custom from the categories" — both taken
+// out of the Shop's showcase and filter chips (and the admin dropdowns). The
+// server still accepts them so any product already saved under one keeps
+// working; it just shows under "All" until it's moved to another category.
 const CATEGORIES = [
   {
     key: 'Rolen Kente',
@@ -47,11 +51,6 @@ const CATEGORIES = [
     key: 'Rolen Bridals',
     blurb: 'Where dreams walk down the aisle, and every vow simply meets elegance.',
     tags: ['Classic Bridal', 'Modern Bridal', 'Custom Bridal'],
-  },
-  {
-    key: 'Rolen Custom',
-    blurb: 'Your vision, our simply elegance.',
-    tags: ['Bespoke Gowns', 'One-of-One Exclusives', 'Consultation Process'],
   },
   {
     key: 'Rolen Ready-to-Wear',
@@ -69,10 +68,6 @@ const CATEGORIES = [
   {
     key: 'Lace',
     blurb: 'Fine lace, finished with simply elegance.',
-  },
-  {
-    key: 'Custom',
-    blurb: 'Made to your own specifications, simply elegance.',
   },
   {
     key: 'Wedding Gowns',
