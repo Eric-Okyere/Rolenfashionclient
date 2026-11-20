@@ -3,6 +3,7 @@ import { safeFetch, mediaUrl } from '@/lib/api';
 import { splitNumbers, waHref } from '@/lib/phone';
 import { isRecent } from '@/lib/time';
 import GalleryItem from '@/components/GalleryItem';
+import ProductGrid from '@/components/ProductGrid';
 import TestimonialCard from '@/components/TestimonialCard';
 import HeroCarousel from '@/components/HeroCarousel';
 import MediaCover from '@/components/MediaCover';
@@ -428,13 +429,13 @@ export default async function ShopPage({ searchParams }) {
           </div>
         </div>
 
-        <StaggerGroup className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {(items || []).map((item) => (
-            <StaggerItem key={item._id}>
-              <GalleryItem item={item} whatsapp={whatsapp} isNew={isRecent(item.createdAt)} />
-            </StaggerItem>
-          ))}
-        </StaggerGroup>
+        {/* `key` restarts the "Load more" count whenever the filter changes. */}
+        <ProductGrid
+          key={`${category || 'all'}-${videoOnly ? 'video' : 'any'}`}
+          items={items || []}
+          whatsapp={whatsapp}
+          newIds={(items || []).filter((i) => isRecent(i.createdAt)).map((i) => i._id)}
+        />
         {(!items || items.length === 0) && (
           <p className="text-center text-muted py-10">No items in this category yet — check back soon.</p>
         )}
