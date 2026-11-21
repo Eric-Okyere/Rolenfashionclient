@@ -35,6 +35,7 @@ export default function AdminDashboard() {
   const [productCount, setProductCount] = useState(null);
   const [testimonialCount, setTestimonialCount] = useState(null);
   const [subscriberCount, setSubscriberCount] = useState(null);
+  const [visitors30, setVisitors30] = useState(null);
   const [activity, setActivity] = useState([]);
   const [activityLoading, setActivityLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -69,6 +70,14 @@ export default function AdminDashboard() {
     })();
   }, []);
 
+  // Visitors tile — fetched on its own so a failure here (e.g. a staff role
+  // that can't see stats) never blocks the rest of the dashboard.
+  useEffect(() => {
+    apiFetch('/api/visits/stats')
+      .then((d) => setVisitors30(d.last30.visitors))
+      .catch(() => {});
+  }, []);
+
   // Light polling so the admin sees new activity land without a manual refresh.
   useEffect(() => {
     const interval = setInterval(async () => {
@@ -97,6 +106,7 @@ export default function AdminDashboard() {
     { label: 'Shop Products', value: productCount, href: '/admin/gallery', icon: '🖼️' },
     { label: 'Testimonials', value: testimonialCount, href: '/admin/testimonials', icon: '💬' },
     { label: 'Newsletter Subscribers', value: subscriberCount, href: '/admin/newsletter', icon: '📧' },
+    { label: 'Visitors (last 30 days)', value: visitors30, href: '/admin/visitors', icon: '👥' },
   ];
 
   return (
@@ -113,7 +123,7 @@ export default function AdminDashboard() {
         initial="hidden"
         animate="visible"
         variants={{ visible: { transition: { staggerChildren: 0.06 } } }}
-        className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6"
+        className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-6"
       >
         {overviewTiles.map((t) => (
           <motion.div key={t.label} variants={{ hidden: { opacity: 0, y: 14 }, visible: { opacity: 1, y: 0, transition: { duration: 0.4, ease: EASE } } }}>

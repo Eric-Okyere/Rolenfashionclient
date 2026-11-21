@@ -8,6 +8,7 @@ import PageTransition from './motion/PageTransition';
 import RouteProgressBar from './motion/RouteProgressBar';
 import BackToTop from './motion/BackToTop';
 import WhatsAppButton from './motion/WhatsAppButton';
+import VisitTracker from './VisitTracker';
 
 // The admin console has its own sidebar/shell — skip the public site's
 // navbar and footer there instead of stacking both.
@@ -21,6 +22,7 @@ export default function SiteChrome({ settings, children }) {
     // reducedMotion="user" makes every motion component below automatically
     // honor the visitor's OS-level "reduce motion" accessibility setting.
     <MotionConfig reducedMotion="user">
+      <VisitTracker />
       <RouteProgressBar />
       <Navbar settings={settings} />
       <main className="flex-1">
