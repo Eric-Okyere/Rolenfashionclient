@@ -19,6 +19,7 @@ import { mediaUrl } from '@/lib/api';
 const links = [
   { href: '/', label: 'Shop' },
   { href: '/school', label: 'School' },
+  { href: '/bespoke', label: 'Bespoke' },
   { href: '/about', label: 'About' },
   { href: '/courses', label: 'Courses', schoolOnly: true },
   { href: '/admissions', label: 'Admissions', schoolOnly: true },
@@ -62,7 +63,8 @@ export default function Navbar({ settings }) {
   // key off this same section split.
   // Product pages (/shop/<id>, linked from WhatsApp order messages) are
   // part of the Shop too, so they keep the Shop name and link set.
-  const isSchoolSection = pathname !== '/' && !pathname.startsWith('/shop');
+  // The bespoke request form is a Shop service too.
+  const isSchoolSection = pathname !== '/' && !pathname.startsWith('/shop') && !pathname.startsWith('/bespoke');
   const displayName = isSchoolSection ? settings?.schoolName || SCHOOL_NAME_FALLBACK : SHOP_NAME;
   const visibleLinks = links.filter((l) => !l.schoolOnly || isSchoolSection);
 

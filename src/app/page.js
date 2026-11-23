@@ -201,16 +201,16 @@ export default async function ShopPage({ searchParams }) {
                     globals.css), scoped to just these two hero buttons
                     rather than every btn-gold/btn-outline site-wide. */}
                 <a href="#collection" className="btn-gold hero-cta-shine">Shop the Collection</a>
-                {orderNumber && (
-                  <a
-                    href={waHref(orderNumber, "Hi Rolen! I'd like to ask about a custom order.")}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="btn-outline hero-cta-shine !border-cream/40 !text-cream hover:!bg-cream hover:!text-ink"
-                  >
-                    Custom Orders
-                  </a>
-                )}
+                {/* Eric: "add Request a bespoke outfit form to the site" — Custom
+                    Orders now opens the bespoke request form instead of a
+                    plain WhatsApp chat, so the order arrives with the design,
+                    photos and measurements in one place. */}
+                <Link
+                  href="/bespoke"
+                  className="btn-outline hero-cta-shine !border-cream/40 !text-cream hover:!bg-cream hover:!text-ink"
+                >
+                  Custom Orders
+                </Link>
               </Reveal>
             </div>
             {/* Eric: "Add a cool animation to this" — the logo now floats

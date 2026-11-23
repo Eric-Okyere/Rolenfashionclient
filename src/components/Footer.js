@@ -39,6 +39,7 @@ export default function Footer({ settings }) {
           <h4 className="font-semibold mb-3 text-gold-light">Quick Links</h4>
           <ul className="space-y-2 text-sm text-cream/70">
             <li><Link href="/" className="hover:text-gold-light">Shop</Link></li>
+            <li><Link href="/bespoke" className="hover:text-gold-light">Request a Bespoke Outfit</Link></li>
             <li><Link href="/school" className="hover:text-gold-light">The School</Link></li>
             <li><Link href="/courses" className="hover:text-gold-light">Courses</Link></li>
             <li><Link href="/admissions" className="hover:text-gold-light">Apply for Admission</Link></li>

@@ -13,6 +13,7 @@ const links = [
   { href: '/admin/carousel', label: 'Ad Carousel', icon: '🎬' },
   { href: '/admin/payments', label: 'Payments', icon: '💳' },
   { href: '/admin/visitors', label: 'Visitors', icon: '👥' },
+  { href: '/admin/bespoke', label: 'Bespoke Requests', icon: '✂️' },
   { href: '/admin/testimonials', label: 'Testimonials', icon: '💬' },
   { href: '/admin/messages', label: 'Messages', icon: '✉️' },
   { href: '/admin/newsletter', label: 'Newsletter', icon: '📧' },
@@ -39,7 +40,7 @@ export default function AdminSidebar() {
       <nav className="flex-1 py-4">
         {links.map((l) => {
           const active = pathname === l.href;
-          if (['/admin/courses', '/admin/visitors'].includes(l.href) && !['admin', 'staff'].includes(user?.role)) return null;
+          if (['/admin/courses', '/admin/visitors', '/admin/bespoke'].includes(l.href) && !['admin', 'staff'].includes(user?.role)) return null;
           return (
             <Link
               key={l.href}
