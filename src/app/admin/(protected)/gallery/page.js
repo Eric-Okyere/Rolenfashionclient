@@ -11,7 +11,7 @@ import { isPreOrderCategory, productNames } from '@/lib/product';
 // any product already saved with one of them — they're just not offered
 // here any more since the shop now organizes around these five lines
 // instead (see Gallery.js for why the server enum still lists every set).
-const categories = ['Rolen Kente', 'Rolen Bridals', 'Rolen Ready-to-Wear', 'Rolen Bespoke', 'Lace', 'Wedding Gowns', 'Other'];
+const categories = ['Rolen Kente', 'Rolen Bridals', 'Ewuraba by Rolen(RTW)', 'Rolen Bespoke', 'Lace', 'Wedding Gowns', 'Other'];
 
 export default function AdminGalleryPage() {
   const [items, setItems] = useState([]);
@@ -246,12 +246,13 @@ export default function AdminGalleryPage() {
               {categories.map((c) => <option key={c} value={c}>{c}</option>)}
             </select>
           </label>
-          <label className="text-sm block">
-            <span className="block mb-1 font-medium">Price (GH¢, optional — for items sold)</span>
-            <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
-          </label>
-          {isPreOrderCategory(form.category) && (
-            <DepositField value={form.depositAmount} price={form.price} onChange={(v) => setForm({ ...form, depositAmount: v })} />
+          {isPreOrderCategory(form.category) ? (
+            <DepositField value={form.depositAmount} onChange={(v) => setForm({ ...form, depositAmount: v })} />
+          ) : (
+            <label className="text-sm block">
+              <span className="block mb-1 font-medium">Price (GH¢)</span>
+              <input type="number" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
+            </label>
           )}
           <label className="text-sm flex items-center gap-2 mt-6">
             <input type="checkbox" checked={form.isFeatured} onChange={(e) => setForm({ ...form, isFeatured: e.target.checked })} />
@@ -325,7 +326,7 @@ export default function AdminGalleryPage() {
             <div className="p-3">
               <p className="text-sm font-medium truncate">{productNames(item).name}</p>
               {productNames(item).subtitle && <p className="text-xs text-ink/70 truncate">{productNames(item).subtitle}</p>}
-              <p className="text-xs text-muted">{item.category}{item.price ? ` · GH¢ ${item.price}` : ''}</p>
+              <p className="text-xs text-muted">{item.category}{!isPreOrderCategory(item.category) && item.price ? ` · GH¢ ${item.price}` : ' · Pre-order'}</p>
               <div className="flex justify-between mt-2 text-xs">
                 <button onClick={() => togglePublish(item)} className="text-gold-dark hover:underline">
                   {item.isPublished ? 'Unpublish' : 'Publish'}
@@ -365,12 +366,13 @@ export default function AdminGalleryPage() {
                   {categories.map((c) => <option key={c} value={c}>{c}</option>)}
                 </select>
               </label>
-              <label className="text-sm block">
-                <span className="block mb-1 font-medium">Price (GH¢, optional — for items sold)</span>
-                <input type="number" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
-              </label>
-              {isPreOrderCategory(editForm.category) && (
-                <DepositField value={editForm.depositAmount} price={editForm.price} onChange={(v) => setEditForm({ ...editForm, depositAmount: v })} />
+              {isPreOrderCategory(editForm.category) ? (
+                <DepositField value={editForm.depositAmount} onChange={(v) => setEditForm({ ...editForm, depositAmount: v })} />
+              ) : (
+                <label className="text-sm block">
+                  <span className="block mb-1 font-medium">Price (GH¢)</span>
+                  <input type="number" value={editForm.price} onChange={(e) => setEditForm({ ...editForm, price: e.target.value })} className="w-full rounded-lg border border-black/15 p-2.5" />
+                </label>
               )}
               <label className="text-sm flex items-center gap-2 mt-6">
                 <input type="checkbox" checked={editForm.isFeatured} onChange={(e) => setEditForm({ ...editForm, isFeatured: e.target.checked })} />
@@ -431,24 +433,23 @@ export default function AdminGalleryPage() {
   );
 }
 
-// Pre-order products only: the deposit a shopper pays online via MoMo. It
-// varies per product, so it's set here; left blank, 70% of the price is
-// charged (the rule already stated on the Shop page). Ready-to-Wear has no
-// deposit — its fixed price is charged in full.
-function DepositField({ value, price, onChange }) {
-  const fallback = price ? Math.round(Number(price) * 0.7) : null;
+// Pre-order products only (no price — Eric: only Ready-to-Wear has a price):
+// the optional deposit a shopper pays via MoMo to place the order. It varies
+// per product; left blank, there's no MoMo button and the customer arranges
+// the order on WhatsApp.
+function DepositField({ value, onChange }) {
   return (
     <label className="text-sm block">
-      <span className="block mb-1 font-medium">Pre-order deposit (GH¢)</span>
+      <span className="block mb-1 font-medium">Pre-order deposit (GH¢, optional)</span>
       <input
         type="number"
         min="0"
         value={value}
-        placeholder={fallback ? `Blank = 70% (GH¢ ${fallback.toLocaleString()})` : 'Blank = 70% of the price'}
+        placeholder="Blank = order via WhatsApp only"
         onChange={(e) => onChange(e.target.value)}
         className="w-full rounded-lg border border-black/15 p-2.5"
       />
-      <span className="block mt-1 text-xs text-muted">What the customer pays via MoMo to place this pre-order.</span>
+      <span className="block mt-1 text-xs text-muted">What the customer pays via MoMo to place this pre-order. No price is shown for pre-order items.</span>
     </label>
   );
 }

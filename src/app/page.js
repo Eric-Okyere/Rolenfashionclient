@@ -54,7 +54,7 @@ const CATEGORIES = [
     tags: ['Classic Bridal', 'Modern Bridal', 'Custom Bridal'],
   },
   {
-    key: 'Rolen Ready-to-Wear',
+    key: 'Ewuraba by Rolen(RTW)',
     blurb: 'Everyday style, simply elegance.',
     subBrands: [
       { name: 'Ewuraba', blurb: 'Grace for every day.' },

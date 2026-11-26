@@ -8,23 +8,31 @@
 // from the category itself rather than a stored flag, so every existing and
 // future product is labelled correctly with no data migration. The legacy
 // 'Ready-to-Wear' value is kept for products saved under the old taxonomy.
-const READY_CATEGORIES = ['Rolen Ready-to-Wear', 'Ready-to-Wear'];
+// Eric: "change Rolen Ready-To-Wear to Ewuraba by Rolen(RTW)". The two old
+// names stay here so a product not yet migrated is still treated as ready.
+export const READY_CATEGORY = 'Ewuraba by Rolen(RTW)';
+const READY_CATEGORIES = [READY_CATEGORY, 'Rolen Ready-to-Wear', 'Ready-to-Wear'];
 
 export function isPreOrderCategory(category) {
   return !READY_CATEGORIES.includes(category);
 }
 
-// Eric: "Allow MoMo pay for pre-order. They have to pay some amount. It
-// varies but ready to wear price is fixed." Ready-to-Wear pays its full
-// price; pre-order pays a deposit — the product's own `depositAmount` if an
-// admin set one, otherwise 70% of the price (the rule already stated on the
-// Shop page). Mirrors the server's utils/preorder.js, which is what actually
-// decides the charge; this copy only decides what the button shows.
+// Eric: "all categories of the products are pre order so no price is
+// attached to them except ready to wear which has a price." Only
+// Ready-to-Wear shows a price; a pre-order piece never does (any old price
+// saved on one is ignored).
+export function displayPrice(item) {
+  if (isPreOrderCategory(item.category)) return null;
+  return item.price ? Number(item.price) : null;
+}
+
+// What MoMo charges: Ready-to-Wear pays its fixed price; a pre-order pays
+// only the deposit an admin set on that product ("It varies") — with no
+// deposit set, the customer arranges it on WhatsApp instead. Mirrors the
+// server's utils/preorder.js, which decides the actual charge.
 export function payableAmount(item) {
-  if (!isPreOrderCategory(item.category)) return item.price || null;
-  if (item.depositAmount) return Number(item.depositAmount);
-  if (item.price) return Math.round(Number(item.price) * 0.7);
-  return null;
+  if (!isPreOrderCategory(item.category)) return item.price ? Number(item.price) : null;
+  return item.depositAmount ? Number(item.depositAmount) : null;
 }
 
 // Eric: "Dress name and description, picture must show in the whatsapp

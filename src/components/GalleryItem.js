@@ -2,7 +2,7 @@
 
 import { useState, useRef } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
-import { isPreOrderCategory, payableAmount, productNames, productPageUrl } from '@/lib/product';
+import { displayPrice, isPreOrderCategory, payableAmount, productNames, productPageUrl } from '@/lib/product';
 import { mediaUrl, API_URL, apiFetch } from '@/lib/api';
 import { splitNumbers, waHref } from '@/lib/phone';
 import WhatsAppIcon from '@/components/icons/WhatsAppIcon';
@@ -61,10 +61,11 @@ export default function GalleryItem({ item, whatsapp, isNew = false, inline = fa
   const orderVerb = isPreOrder ? 'pre-order' : 'order';
   const { name: productName, subtitle } = productNames(item);
   const payAmount = payableAmount(item);
+  const price = displayPrice(item);
   const shortDescription =
     item.description && item.description.length > 300 ? `${item.description.slice(0, 297).trimEnd()}…` : item.description;
   const orderMessage = [
-    `Hi Rolen! I'd like to ${orderVerb}: ${productName}${subtitle ? ` — ${subtitle}` : ''}${item.price ? ` (GH¢ ${Number(item.price).toLocaleString()})` : ''}.`,
+    `Hi Rolen! I'd like to ${orderVerb}: ${productName}${subtitle ? ` — ${subtitle}` : ''}${price ? ` (GH¢ ${price.toLocaleString()})` : ''}.`,
     shortDescription,
     productPageUrl(item),
   ]
@@ -240,10 +241,10 @@ export default function GalleryItem({ item, whatsapp, isNew = false, inline = fa
                   {item.description && <p className="text-sm text-cream/70 max-w-md">{item.description}</p>}
                 </div>
                 <div className="flex items-center flex-wrap gap-3">
-                  {item.price && <p className="text-gold-light font-semibold whitespace-nowrap">GH¢ {Number(item.price).toLocaleString()}</p>}
+                  {price && <p className="text-gold-light font-semibold whitespace-nowrap">GH¢ {price.toLocaleString()}</p>}
                   {/* Only offered when there's something to charge: the price
-                      (Ready-to-Wear) or a deposit (pre-order — set per
-                      product, or 70% of the price). */}
+                      (Ready-to-Wear) or a deposit an admin set on this
+                      pre-order product. */}
                   {isPreOrder && payAmount && (
                     <p className="text-cream/80 text-xs whitespace-nowrap">Deposit: GH¢ {payAmount.toLocaleString()}</p>
                   )}
@@ -335,7 +336,7 @@ export default function GalleryItem({ item, whatsapp, isNew = false, inline = fa
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex flex-col justify-end p-3">
           <p className="text-white text-sm font-medium">{productName}</p>
           {subtitle && <p className="text-white/80 text-xs line-clamp-1">{subtitle}</p>}
-          {item.price && <p className="text-gold-light text-xs">GH¢ {Number(item.price).toLocaleString()}</p>}
+          {price && <p className="text-gold-light text-xs">GH¢ {price.toLocaleString()}</p>}
         </div>
         {hasVideo && (
           <span className="absolute top-2 right-2 bg-black/70 text-white text-[10px] px-2 py-0.5 rounded-full">▶ Video</span>
